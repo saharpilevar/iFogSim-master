@@ -1,0 +1,2 @@
+NodeName,BusyPower,DownBw,IdlePower,Level,Mips,Ram,RatePerMips,UpBw,UpLinkLatency
+AUCTIONEER,2,10000,0.1,0,100000,1600000,1,50000,100
