@@ -131,6 +131,7 @@ public class AuctioneerDevice extends Device {
                     double e_ij_offload = e_ij_transmit + e_ij_process;
 
                     matrix[i][j]= 0.5 * t_ij_offload + 0.5 * e_ij_offload;
+
                 }
 
             }
