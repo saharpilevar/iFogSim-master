@@ -34,6 +34,7 @@ public class InputReader {
                 edgeServer.setUpLinkLatency(Double.valueOf(attributes[9]));
                 edgeServer.setAreaId(Integer.parseInt(attributes[10]));
                 edgeServer.setJoinDelay(Integer.parseInt(attributes[11]));
+                edgeServer.setBidPrice(Double.valueOf(attributes[12]));
                 edgeServerList.add(edgeServer);
                 line = br.readLine();
             }
@@ -144,7 +145,7 @@ public class InputReader {
                 String[] attributes = line.split(",");
                 Task task = new Task(attributes[0],
                         Long.valueOf(attributes[1]), Long.valueOf(attributes[2]),
-                        Integer.valueOf(attributes[3]), Long.valueOf(attributes[4]));
+                        Integer.valueOf(attributes[3]), Long.valueOf(attributes[4]), 0);
                 List<Task> subTasks= new ArrayList<>();
                 for(int i= Integer.valueOf(attributes[6]); i<= Integer.valueOf(attributes[7]);i++ )
                {
@@ -232,7 +233,7 @@ public class InputReader {
                 String[] attributes = line.split(",");
                 Task task = new Task(attributes[5] + '-' + attributes[0],
                         Long.valueOf(attributes[1]), Long.valueOf(attributes[2]),
-                        Integer.valueOf(attributes[3]), Long.valueOf(attributes[4]));
+                        Integer.valueOf(attributes[3]), Long.valueOf(attributes[4]),Long.valueOf(attributes[6]));
                 if (subTasksListMap.containsKey(Integer.valueOf(attributes[5]))) {
                     subTasksListMap.get(Integer.valueOf(attributes[5])).add(task);
                 } else {

@@ -100,6 +100,7 @@ public class TaskGeneratorDevice extends Sensor {
             tuple.setTaskId(subTask.getId());
             tuple.setDestModuleName(_edge.getDestination());
             tuple.setSrcModuleName(getSensorName());
+            tuple.setTupleBidPrice(subTask.getBidPrice());
 
             int actualTupleId = updateTimings(getSensorName(), tuple.getDestModuleName());
             tuple.setActualTupleId(actualTupleId);

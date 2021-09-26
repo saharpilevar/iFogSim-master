@@ -21,6 +21,8 @@ import org.fog.utils.FogUtils;
 import org.fog.utils.NetworkUsageMonitor;
 import org.fog.utils.TimeKeeper;
 
+import org.edgeComputing.Env;
+
 public class Controller extends SimEntity{
 	
 	public static boolean ONLY_CLOUD = false;
@@ -234,6 +236,7 @@ public class Controller extends SimEntity{
 				sendNow(deviceId, FogEvents.LAUNCH_MODULE, module);
 			}
 		}
+		send(Env.DEVICE_AUCTIONEER,0,FogEvents.FIND_MATCHES_PERIODICALLY);
 	}
 
 	public List<FogDevice> getFogDevices() {

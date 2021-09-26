@@ -3,6 +3,7 @@ package org.edgeComputing.model;
 public class EdgeServer extends EdgeEntity{
     private int areaId;
     private double joinDelay;
+    private double bidPrice;
 
     public EdgeServer(){
         super();
@@ -27,5 +28,13 @@ public class EdgeServer extends EdgeEntity{
 
     public void setJoinDelay(double joinDelay) {
         this.joinDelay = joinDelay;
+    }
+
+    public double getBidPrice() {
+        return bidPrice;
+    }
+
+    public void setBidPrice(double bidPrice) {
+        this.bidPrice = bidPrice;
     }
 }

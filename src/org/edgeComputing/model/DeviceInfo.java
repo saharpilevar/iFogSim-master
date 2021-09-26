@@ -9,6 +9,7 @@ public class DeviceInfo {
     private Double networkDelay;
     private Long mips;
     private Integer ram;
+    private Double bidPrice;
 
 
     public String getName() {
@@ -72,6 +73,14 @@ public class DeviceInfo {
 
     public void setRam(int ram) {
         this.ram = ram;
+    }
+
+    public Double getBidPrice() {
+        return bidPrice;
+    }
+
+    public void setBidPrice(Double bidPrice) {
+        this.bidPrice = bidPrice;
     }
 
     @Override

@@ -23,6 +23,7 @@ public class EdgeServerDevice extends Device {
     private long mips = 0;
     private PowerModel powerModel;
     private int ram = 0;
+    private  double bidPrice;
 
     private boolean endProcess = false;
     public EdgeServerDevice(String name, FogDeviceCharacteristics characteristics,
@@ -37,11 +38,12 @@ public class EdgeServerDevice extends Device {
 
     public EdgeServerDevice(String name, long mips, int ram, double uplinkBandwidth, double downlinkBandwidth,
                             double ratePerMips, PowerModel powerModel, FogDeviceCharacteristics characteristics,
-                            VmAllocationPolicy vmAllocationPolicy) throws Exception {
+                            VmAllocationPolicy vmAllocationPolicy, double bidPrice) throws Exception {
         super(name,characteristics, vmAllocationPolicy, null, 0, uplinkBandwidth, downlinkBandwidth, 0, ratePerMips);
         this.mips = mips;
         this.ram = ram;
-        this.powerModel=powerModel;
+        this.powerModel = powerModel;
+        this.bidPrice = bidPrice;
 //                            double ratePerMips, PowerModel powerModel,FogDeviceCharacteristics characteristics, VmAllocationPolicy vmAllocationPolicy) throws Exception {
 
 //        super(name, mips, ram, uplinkBandwidth, downlinkBandwidth, ratePerMips, powerModel);
@@ -128,8 +130,7 @@ public class EdgeServerDevice extends Device {
     }
 
     public void sendDeviceInfo(){
-
-
+        if (!endProcess) {
             DeviceInfo info = new DeviceInfo();
             info.setId(this.getId());
             info.setName(this.getName());
@@ -139,8 +140,11 @@ public class EdgeServerDevice extends Device {
             info.setNetworkDelay(this.uplinkLatency);
             info.setMips(this.mips);
             info.setRam(this.ram);
+            info.setBidPrice(this.bidPrice);
             send(parentId, getUplinkLatency(), FogEvents.RECEIVE_DEVICE_INFO, info);
             send(this.getId(), heartBeatDelay, FogEvents.SEND_PERIODIC_DEVICE_INFO);
+            endProcess =true;
+        }
 
     }
 }

@@ -375,7 +375,7 @@ public class Edge {
 //                    new AppModuleAllocationPolicy(hostList), storageList, 10, edgeServer.getUpBw(),
 //                    edgeServer.getDownBw(), 0, edgeServer.getRatePerMips(), edgeServer.getJoinDelay());
 
-            edgeServerDevice = new EdgeServerDevice(edgeServer.getNodeName(),edgeServer.getMips(),edgeServer.getRam(),edgeServer.getUpBw(),edgeServer.getDownBw(),edgeServer.getRatePerMips(),new FogLinearPowerModel(edgeServer.getBusyPower(), edgeServer.getIdlePower()),characteristics, new AppModuleAllocationPolicy(hostList));
+            edgeServerDevice = new EdgeServerDevice(edgeServer.getNodeName(),edgeServer.getMips(),edgeServer.getRam(),edgeServer.getUpBw(),edgeServer.getDownBw(),edgeServer.getRatePerMips(),new FogLinearPowerModel(edgeServer.getBusyPower(), edgeServer.getIdlePower()),characteristics, new AppModuleAllocationPolicy(hostList),edgeServer.getBidPrice());
         } catch (Exception e) {
             e.printStackTrace();
         }

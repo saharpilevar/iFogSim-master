@@ -17,19 +17,21 @@ public class Task {
     private TaskStatus status;
     private Long outputSize = 0L;
     private Tuple tuple;
+    private double bidPrice;
 
     public Task(String id) {
         this.id = id;
         this.status = TaskStatus.TODO;
     }
 
-    public Task(String id, Long cpuLength, Long nwLength, Integer pesNumber, Long outputSize) {
+    public Task(String id, Long cpuLength, Long nwLength, Integer pesNumber, Long outputSize, double bidPrice) {
         this.id = id;
         this.cpuLength = cpuLength;
         this.nwLength = nwLength;
         this.pesNumber = pesNumber;
         this.status = TaskStatus.TODO;
         this.outputSize = outputSize;
+        this.bidPrice = bidPrice;
     }
 
     public List<Task> getReadySubTask() {
@@ -96,6 +98,13 @@ public class Task {
         this.subTasks = subTasks;
     }
 
+    public double getBidPrice() {
+        return bidPrice;
+    }
+
+    public void setBidPrice(double bidPrice) {
+        this.bidPrice = bidPrice;
+    }
 
 
 

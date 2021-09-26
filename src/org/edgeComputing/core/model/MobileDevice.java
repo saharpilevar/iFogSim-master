@@ -48,12 +48,13 @@ public class MobileDevice extends Device {
                         PowerModel powerModel, double idlePower, double busyPower, double transmissionPower, FogDeviceCharacteristics characteristics,
                         VmAllocationPolicy vmAllocationPolicy) throws Exception {
         super(name,characteristics, vmAllocationPolicy, null, 0, uplinkBandwidth, downlinkBandwidth, 0, ratePerMips);
-        this.mips=mips;
-        this.ram=ram;
-        this.powerModel=powerModel;
-        this.transmissionPower=transmissionPower;
-        this.idlePower=idlePower;
-        this.busyPower=busyPower;
+        this.mips = mips;
+        this.ram = ram;
+        this.powerModel = powerModel;
+        this.transmissionPower = transmissionPower;
+        this.idlePower = idlePower;
+        this.busyPower = busyPower;
+
     }
 
     @Override
@@ -79,6 +80,7 @@ public class MobileDevice extends Device {
         tuple.setIdlePowerOfSourceDevice(this.idlePower);
         tuple.setBusyPowerOfSourceDevice(this.busyPower);
         tuple.setTransmissionPowerOfSourceDevice(this.transmissionPower);
+        tuple.setTupleBidPrice(tuple.getTupleBidPrice());
         //tuple.setSrcModuleName(this.getName());
         tuple.setDirection(Tuple.UP);
         tuple.setSrcModuleName(Env.DEVICE_USER_EQUIPMENT);

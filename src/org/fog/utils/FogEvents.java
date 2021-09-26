@@ -32,5 +32,6 @@ public class FogEvents {
 	public static final int SEND_PERIODIC_DEVICE_INFO = BASE + 27;
 	public static final int RECEIVE_DEVICE_INFO = BASE + 28;
     public static final int END_PROCESS = BASE + 29;
+	public static final int FIND_MATCHES_PERIODICALLY = BASE + 30;
 
 }
