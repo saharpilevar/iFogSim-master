@@ -34,6 +34,7 @@ public class Tuple extends Cloudlet{
 	private double networkDelay = 0.0;
 	private double runningTime = -1.0;
 	private String taskId = "";
+	private double bidPrice;
 
 	//Fields of source mobile device
 	private long mipsOfSourceDevice;
@@ -253,6 +254,14 @@ public class Tuple extends Cloudlet{
 
 	public void setTransmissionPowerOfSourceDevice(double transmissionPowerOfSourceDevice) {
 		this.transmissionPowerOfSourceDevice = transmissionPowerOfSourceDevice;
+	}
+
+	public double getTupleBidPrice() {
+		return bidPrice;
+	}
+
+	public void setTupleBidPrice(double bidPrice) {
+		this.bidPrice = bidPrice;
 	}
 
 
