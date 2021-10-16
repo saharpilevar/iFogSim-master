@@ -55,12 +55,10 @@ public abstract class Device extends FogDevice {
         Tuple tuple = (Tuple) ev.getData();
         send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), FogEvents.TUPLE_ACK);
 
-//        Logger.debug(getName(),
-//                "Received tuple " + tuple.getCloudletId() + "with tupleType = " + tuple.getTupleType() + "\t| Source : " +
-//                        CloudSim.getEntityName(ev.getSource()) + "|Dest : " + CloudSim.getEntityName(
-//                        ev.getDestination()));
-
-        if(tuple.getTupleType().equals(Env.TUPLE_TYPE_TASK)){
+         if(tuple.getTupleType().equals(Env.TUPLE_TYPE_TASK_INFO)){
+            this.handleTaskInfo(ev);
+        }
+        else if(tuple.getTupleType().equals(Env.TUPLE_TYPE_TASK)){
             this.handleTasks(ev);
         }
         else if(tuple.getTupleType().equals(Env.TUPLE_TYPE_RESPONSE)){
@@ -69,9 +67,7 @@ public abstract class Device extends FogDevice {
         else if(tuple.getTupleType().equals(Env.TUPLE_TYPE_MATCH_RESPONSE_TO_MOBILE)){
             this.handleAuctioneerResponse(ev);
         }
-        else if(tuple.getTupleType().equals(Env.TUPLE_TYPE_TASK_INFO)){
-            this.handleTaskInfo(ev);
-        }
+
         else if(tuple.getTupleType().equals(Env.TUPLE_TYPE_EDGE_SERVER_INFO)){
             this.handleEdgeServerInfo(ev);
         }
@@ -87,6 +83,64 @@ public abstract class Device extends FogDevice {
 
     protected abstract void handleEdgeServerInfo(SimEvent ev);
 
+    @Override
+    protected void checkCloudletCompletion() {
+        boolean cloudletCompleted = false;
+        List<? extends Host> list = getVmAllocationPolicy().getHostList();
+        for (int i = 0; i < list.size(); i++) {
+            Host host = list.get(i);
+            for (Vm vm : host.getVmList()) {
+                while (vm.getCloudletScheduler().isFinishedCloudlets()) {
+                    Cloudlet cl = vm.getCloudletScheduler().getNextFinishedCloudlet();
+                    if (cl != null) {
+                        cloudletCompleted = true;
+                        Tuple tuple = (Tuple)cl;
+                        TimeKeeper.getInstance().tupleEndedExecution(tuple);
+                        Application application = getApplicationMap().get(tuple.getAppId());
+//                        Logger.debug(getName(), "Completed execution of tuple "+tuple.getCloudletId()+"on "+tuple.getDestModuleName());
+                        List<Tuple> resultantTuples = application.getResultantTuples(tuple.getDestModuleName(), tuple, getId(), vm.getId());
+                        for(Tuple resTuple : resultantTuples){
+                            resTuple.setModuleCopyMap(new HashMap<String, Integer>(tuple.getModuleCopyMap()));
+                            resTuple.getModuleCopyMap().put(((AppModule)vm).getName(), vm.getId());
+                            Tuple tpl = tupleCloudletMap.get(cl.getCloudletId());
+                            resTuple.setSourceDeviceId(tpl.getSourceDeviceId());
+                            resTuple.setDestinationId(tpl.getActualSourceId());
+                            resTuple.setActualRequestedTuple(tpl);
+                            resTuple.setExecutorName(tpl.getExecutorName());
+                            resTuple.setExecutorId(tpl.getExecutorId());
+                            updateTimingsOnSending(resTuple);
+                            sendToSelf(resTuple);
+                        }
+                        sendNow(cl.getUserId(), CloudSimTags.CLOUDLET_RETURN, cl);
+                    }
+                }
+            }
+        }
+        if(cloudletCompleted)
+            updateAllocatedMips(null);
+    }
+
+    @Override
+    protected void sendUpFreeLink(Tuple tuple){
+        double networkDelay = tuple.getCloudletFileSize()/getUplinkBandwidth();
+        setNorthLinkBusy(true);
+        tuple.setNetworkDelay(tuple.getNetworkDelay()+ networkDelay+ getUplinkLatency());
+        send(getId(), networkDelay, FogEvents.UPDATE_NORTH_TUPLE_QUEUE);
+        send(parentId, networkDelay+getUplinkLatency(), FogEvents.TUPLE_ARRIVAL, tuple);
+        NetworkUsageMonitor.sendingTuple(getUplinkLatency(), tuple.getCloudletFileSize());
+    }
+
+    @Override
+    protected void sendDownFreeLink(Tuple tuple, int childId){
+        double networkDelay = tuple.getCloudletFileSize()/getDownlinkBandwidth();
+        //Logger.debug(getName(), "Sending tuple with tupleType = "+tuple.getTupleType()+" DOWN");
+        setSouthLinkBusy(true);
+        double latency = getChildToLatencyMap().get(childId);
+        tuple.setNetworkDelay(tuple.getNetworkDelay()+ networkDelay+ latency);
+        send(getId(), networkDelay, FogEvents.UPDATE_SOUTH_TUPLE_QUEUE);
+        send(childId, networkDelay+latency, FogEvents.TUPLE_ARRIVAL, tuple);
+        NetworkUsageMonitor.sendingTuple(latency, tuple.getCloudletFileSize());
+    }
 
 
 

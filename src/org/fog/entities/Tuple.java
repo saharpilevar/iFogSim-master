@@ -32,15 +32,24 @@ public class Tuple extends Cloudlet{
 	private double creationTime = -1.0;
 	private double doneTime = -1.0;
 	private double networkDelay = 0.0;
+	private Double parentDeadline;
+	private boolean failed;
+	private String parentTaskId = "";
 	private double runningTime = -1.0;
 	private String taskId = "";
+	private boolean doneTuple;
+	private boolean startTuple;
 	private double bidPrice;
+	private Double upLinkBandwidth = -1.0D;
+	private Double downLinkBandwidth = -1.0D;
 
 	//Fields of source mobile device
 	private long mipsOfSourceDevice;
 	private double idlePowerOfSourceDevice;
 	private double busyPowerOfSourceDevice;
 	private double transmissionPowerOfSourceDevice;
+	private double sourcexCoordinate;
+	private double sourceyCoordinate;
 	/**
 	 * Map to keep track of which module instances has a tuple traversed.
 	 * 
@@ -264,5 +273,87 @@ public class Tuple extends Cloudlet{
 		this.bidPrice = bidPrice;
 	}
 
+	public int getActualSourceId() {
+		return actualSourceId;
+	}
+
+	public void setActualSourceId(int actualSourceId) {
+		this.actualSourceId = actualSourceId;
+	}
+
+	public double getSourcexCoordinate() {
+		return sourcexCoordinate;}
+	public void setSourcexCoordinate(double sourcexCoordinate) {
+		this.sourcexCoordinate = sourcexCoordinate;}
+	public double getSourceyCoordinate() {
+		return sourceyCoordinate;}
+	public void setSourceyCoordinate(double sourceyCoordinate) {
+		this.sourceyCoordinate = sourceyCoordinate;}
+
+	public String getParentTaskId() {
+		return parentTaskId;
+	}
+
+	public void setParentTaskId(String parentTaskId) {
+		this.parentTaskId = parentTaskId;
+	}
+
+	public boolean isDoneTuple() {
+		return doneTuple;
+	}
+
+	public void setDoneTuple(boolean doneTuple) {
+		this.doneTuple = doneTuple;
+	}
+
+	public boolean isStartTuple() {
+		return startTuple;
+	}
+
+	public void setStartTuple(boolean startTuple) {
+		this.startTuple = startTuple;
+	}
+
+	public Double getParentDeadline() {
+		return parentDeadline;
+	}
+
+	public void setParentDeadline(Double parentDeadline) {
+		this.parentDeadline = parentDeadline;
+	}
+
+	public boolean isFailed() {
+		return failed;
+	}
+
+	public void setFailed(boolean failed) {
+		this.failed = failed;
+	}
+
+	public Double getUpLinkBandwidth() {
+		return upLinkBandwidth;
+	}
+
+	public void setUpLinkBandwidth(Double upLinkBandwidth) {
+		if(this.upLinkBandwidth == -1.0){
+			this.upLinkBandwidth = upLinkBandwidth;
+		}
+		else if(upLinkBandwidth < this.upLinkBandwidth) {
+			this.upLinkBandwidth = upLinkBandwidth;
+		}
+	}
+
+	public Double getDownLinkBandwidth() {
+		return downLinkBandwidth;
+	}
+
+	public void setDownLinkBandwidth(Double downLinkBandwidth) {
+		if(this.downLinkBandwidth == -1.0){
+			this.downLinkBandwidth = downLinkBandwidth;
+		}
+		else if(downLinkBandwidth < this.downLinkBandwidth) {
+			this.downLinkBandwidth = downLinkBandwidth;
+		}
+	}
 
 }

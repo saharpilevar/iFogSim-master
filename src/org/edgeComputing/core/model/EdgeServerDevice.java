@@ -12,6 +12,7 @@ import org.fog.application.AppModule;
 import org.fog.entities.FogDeviceCharacteristics;
 import org.fog.entities.Tuple;
 import org.fog.utils.FogEvents;
+import org.fog.utils.Logger;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -21,35 +22,27 @@ public class EdgeServerDevice extends Device {
     private double heartBeatDelay = 10;
     private double joinTime = 0;
     private long mips = 0;
-    private PowerModel powerModel;
     private int ram = 0;
-    private  double bidPrice;
-
+    private double bidPrice = 0;
     private boolean endProcess = false;
     public EdgeServerDevice(String name, FogDeviceCharacteristics characteristics,
                             VmAllocationPolicy vmAllocationPolicy,
                             List<Storage> storageList, double schedulingInterval,
                             double uplinkBandwidth, double downlinkBandwidth, double uplinkLatency,
-                            double ratePerMips, double joinTime) throws Exception {
+                            double ratePerMips, double joinTime, long mips, int ram, double bidPrice) throws Exception {
         super(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval, uplinkBandwidth,
                 downlinkBandwidth, uplinkLatency, ratePerMips);
         this.joinTime = joinTime;
+        this.mips = mips;
+        this.ram = ram;
+        this.bidPrice = bidPrice;
     }
 
     public EdgeServerDevice(String name, long mips, int ram, double uplinkBandwidth, double downlinkBandwidth,
-                            double ratePerMips, PowerModel powerModel, FogDeviceCharacteristics characteristics,
-                            VmAllocationPolicy vmAllocationPolicy, double bidPrice) throws Exception {
-        super(name,characteristics, vmAllocationPolicy, null, 0, uplinkBandwidth, downlinkBandwidth, 0, ratePerMips);
-        this.mips = mips;
-        this.ram = ram;
-        this.powerModel = powerModel;
-        this.bidPrice = bidPrice;
-//                            double ratePerMips, PowerModel powerModel,FogDeviceCharacteristics characteristics, VmAllocationPolicy vmAllocationPolicy) throws Exception {
-
-//        super(name, mips, ram, uplinkBandwidth, downlinkBandwidth, ratePerMips, powerModel);
-
-            }
-
+                            double ratePerMips,
+                            PowerModel powerModel) throws Exception {
+        super(name, mips, ram, uplinkBandwidth, downlinkBandwidth, ratePerMips, powerModel);
+    }
     @Override
     protected void processOtherEvent(SimEvent ev) {
         switch (ev.getTag()) {
@@ -107,6 +100,7 @@ public class EdgeServerDevice extends Device {
 
         tuple.setExecutorId(this.getId());
         tuple.setExecutorName(this.getName());
+//        tuple.setTupleType(Env.TUPLE_TYPE_RESPONSE);
     }
 
     protected void handleResponse(SimEvent ev){
@@ -115,9 +109,7 @@ public class EdgeServerDevice extends Device {
     }
 
     protected void handleAuctioneerResponse(SimEvent ev){
-        Tuple tuple = (Tuple) ev.getData();
-        ///??????????????????
-    }
+            }
 
     @Override
     protected void handleEdgeServerInfo(SimEvent ev) {
@@ -141,9 +133,11 @@ public class EdgeServerDevice extends Device {
             info.setMips(this.mips);
             info.setRam(this.ram);
             info.setBidPrice(this.bidPrice);
+            info.setxCoordinate(this.getxCoordinate());
+            info.setyCoordinate(this.getyCoordinate());
             send(parentId, getUplinkLatency(), FogEvents.RECEIVE_DEVICE_INFO, info);
             send(this.getId(), heartBeatDelay, FogEvents.SEND_PERIODIC_DEVICE_INFO);
-            endProcess =true;
+//            endProcess =true;
         }
 
     }

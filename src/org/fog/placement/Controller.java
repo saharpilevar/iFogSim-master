@@ -236,7 +236,6 @@ public class Controller extends SimEntity{
 				sendNow(deviceId, FogEvents.LAUNCH_MODULE, module);
 			}
 		}
-		send(Env.DEVICE_AUCTIONEER,0,FogEvents.FIND_MATCHES_PERIODICALLY);
 	}
 
 	public List<FogDevice> getFogDevices() {
