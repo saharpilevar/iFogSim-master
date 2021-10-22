@@ -15,6 +15,8 @@ import org.fog.entities.FogDeviceCharacteristics;
 import org.fog.entities.Tuple;
 import org.fog.utils.FogEvents;
 
+import org.edgeComputing.ethereum.Web3JClient;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -71,6 +73,11 @@ public class MobileDevice extends Device {
     }
 
     protected void handleTasks(SimEvent ev){
+        System.out.println("   %%%%%%%%%%%%%%%%  ");
+        System.out.println(ev.toString());
+        Web3JClient client = new Web3JClient();
+        System.out.println(client.GetLastBlockNumber().toString());
+        System.out.println("   %%%%%%%%%%%%%%%%  ");
         //send tuple information to auctioneer
         Tuple tuple= (Tuple) ev.getData();
         tuple.setDestModuleName(Env.DEVICE_AUCTIONEER);
