@@ -6,19 +6,23 @@ import org.edgeComputing.util.InputReader;
 
 import java.util.List;
 import java.util.Map;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Runner {
 
-    private final static String CLOUD_CSV_PATH = "E:\\Eclipse_workSpace\\iFogSim-master\\TestData\\Cloud.csv";
-    private final static String PROXY_CSV_PATH = "E:\\Eclipse_workSpace\\iFogSim-master\\TestData\\ProxyServer.csv";
-    private final static String EDGE_SERVER_CSV_PATH = "E:\\Eclipse_workSpace\\iFogSim-master\\TestData\\EdgeServers.csv";
-    private final static String TASKS_CSV_PATH = "E:\\Eclipse_workSpace\\iFogSim-master\\TestData\\Tasks.csv";
-    private final static String UES_CSV_PATH = "E:\\Eclipse_workSpace\\iFogSim-master\\TestData\\UEs.csv";
-    private final static String SUB_TASKS_CSV_PATH = "E:\\Eclipse_workSpace\\iFogSim-master\\TestData\\SubTasks.csv";
-    private final static String AUCTIONEER_CSV_PATH = "E:\\Eclipse_workSpace\\iFogSim-master\\TestData\\Auctioneer.csv";
 
     //private final static String SUB_TASKS_GRAPH_CSV_PATH = "E:\\Eclipse_workSpace\\OffloadingEdgeComputing-initialize\\OffloadingEdgeComputing-initialize\\TestData\\SubTasksGraphs.csv";
     public static void main(String[] args){
+        Path currentPath = Paths.get(System.getProperty("user.dir"));
+        String CLOUD_CSV_PATH = Paths.get(currentPath.toString(), "TestData", "Cloud.csv").toString();
+        String PROXY_CSV_PATH = Paths.get(currentPath.toString(), "TestData", "ProxyServer.csv").toString();
+        String EDGE_SERVER_CSV_PATH = Paths.get(currentPath.toString(), "TestData", "EdgeServers.csv").toString();
+        String TASKS_CSV_PATH = Paths.get(currentPath.toString(), "TestData", "Tasks.csv").toString();
+        String UES_CSV_PATH = Paths.get(currentPath.toString(), "TestData", "UEs.csv").toString();
+        String SUB_TASKS_CSV_PATH = Paths.get(currentPath.toString(), "TestData", "SubTasks.csv").toString();
+        String AUCTIONEER_CSV_PATH = Paths.get(currentPath.toString(), "TestData", "Auctioneer.csv").toString();
+        
         InputReader inputReader = new InputReader();
 
         EdgeConfig edgeConfig = new EdgeConfig(1, "test");
