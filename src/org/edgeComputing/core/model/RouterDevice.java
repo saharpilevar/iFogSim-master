@@ -56,9 +56,6 @@ public class RouterDevice extends Device {
     @Override
     protected void processOtherEvent(SimEvent ev) {
         switch (ev.getTag()) {
-//            case FogEvents.LAUNCH_MODULE:
-//                processModuleArrival(ev);
-//                break;
             case FogEvents.RECEIVE_DEVICE_INFO:
                 forwardEdgeServerInfoToAuctioneer(ev);
                 break;
@@ -71,37 +68,6 @@ public class RouterDevice extends Device {
                 break;
         }
     }
-
-//    @Override
-//    protected void processTupleArrival(SimEvent ev) {
-//        Tuple tuple = (Tuple) ev.getData();
-//
-//        send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), FogEvents.TUPLE_ACK);
-//
-////        Logger.debug(getName(),
-////                "Received tuple " + tuple.getCloudletId() + "with tupleType = " + tuple.getTupleType() + "\t| Source : " +
-////                        CloudSim.getEntityName(ev.getSource()) + "|Dest : " + CloudSim.getEntityName(
-////                        ev.getDestination()));
-//
-//        if(tuple.getTupleType().equals(Env.TUPLE_TYPE_TASK_INFO)){
-//            this.forwardTupleToAuctioneer(ev);
-//        }
-//         if(tuple.getTupleType().equals(Env.TUPLE_TYPE_EDGE_SERVER_INFO)){
-//            this.forwardEdgeServerInfoToAuctioneer(ev);
-//        }
-//        else if(tuple.getTupleType().equals(Env.TUPLE_TYPE_MATCH_RESPONSE_TO_MOBILE)){
-//            this.forwardMatchResponseToMobile(ev);
-//        }
-//        else if(tuple.getTupleType().equals(Env.TUPLE_TYPE_TASK)){
-//            this.forwardTuple(ev);
-//        }
-//        else if(tuple.getTupleType().equals(Env.TUPLE_TYPE_RESPONSE)){
-//            this.forwardMatchResponseToMobile(ev);
-//        }
-//    }
-
-
-
     protected void handleTasks(SimEvent ev) {
         this.forwardTuple(ev);
     }

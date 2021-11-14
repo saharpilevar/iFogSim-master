@@ -85,13 +85,9 @@ public class MobileDevice extends Device {
                 Output.writeResult();
                 this.sendNow(this.getParentId(), FogEvents.END_PROCESS);
                 break;
-//            case FogEvents.MATCHES_RESPONSE_TO_MOBILE:
-//                handleAuctioneerResponse(ev);
-//                break;
             case FogEvents.FAIL_TASK:
                 this.failTask(ev);
                 break;
-
             default:
                 super.processOtherEvent(ev);
                 break;
@@ -101,8 +97,8 @@ public class MobileDevice extends Device {
     protected void handleTasks(SimEvent ev){
         Tuple tuple= (Tuple) ev.getData();
         if (tuple.getSrcModuleName()=="TASK") {
-            tuple.setDestModuleName(Env.DEVICE_AUCTIONEER);
             tuple.setTupleType(Env.TUPLE_TYPE_TASK_INFO);
+            tuple.setDestModuleName(Env.DEVICE_AUCTIONEER);
             tuple.setMipsOfSourceDevice(this.mips);
             tuple.setIdlePowerOfSourceDevice(this.idlePower);
             tuple.setBusyPowerOfSourceDevice(this.busyPower);
@@ -136,7 +132,8 @@ public class MobileDevice extends Device {
             }
         }
         int destinationId = tuple.getDestinationId();
-        this.send(this.getId(), tuple.getParentDeadline(), FogEvents.FAIL_TASK, tuple);
+        String tupleId=tuple.getTaskId();
+//        this.send(this.getId(), tuple.getParentDeadline(), FogEvents.FAIL_TASK, tuple);
 
 //        tuple.setActualSourceId(this.getId());
         tuple.setTupleType(Env.TUPLE_TYPE_TASK);
@@ -182,14 +179,7 @@ public class MobileDevice extends Device {
         if (this.taskGeneratorDevice != null) {
             this.taskGeneratorDevice.doneTuple(tuple);
         }
-
-//        Tuple tuple = (Tuple) ev.getData();
-//        if (this.taskGeneratorDeviceId > -1) {
-//            sendNow(this.taskGeneratorDeviceId, FogEvents.DONE_TUPLE, tuple);
-//        }
     }
-
-
     protected void handleEdgeServerInfo(SimEvent ev) {  }
 
     protected void handleTaskInfo(SimEvent ev) {  }

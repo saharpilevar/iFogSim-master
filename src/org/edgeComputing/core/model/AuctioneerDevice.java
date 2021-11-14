@@ -9,15 +9,14 @@ import org.edgeComputing.model.DeviceInfo;
 import org.fog.entities.FogDeviceCharacteristics;
 import org.fog.entities.Tuple;
 import org.fog.utils.FogEvents;
-
 import java.util.*;
 import java.lang.Math;
 
 public class AuctioneerDevice extends Device {
         private List<DeviceInfo> edgeServerInfoList = new ArrayList<>();
         private List<Tuple> tupleList = new ArrayList<>();
-        private boolean endProcess1 = false;
-        private double heartBeatDelay = 10;
+        private static List<String> graph = new ArrayList<String>();
+
 
     public AuctioneerDevice(String name, FogDeviceCharacteristics characteristics,
                             VmAllocationPolicy vmAllocationPolicy,
@@ -27,14 +26,11 @@ public class AuctioneerDevice extends Device {
             super(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval, uplinkBandwidth,
                     downlinkBandwidth, uplinkLatency, ratePerMips);
         }
-
         public AuctioneerDevice(String name, long mips, int ram, double uplinkBandwidth, double downlinkBandwidth,
                             double ratePerMips,
                             PowerModel powerModel) throws Exception {
             super(name, mips, ram, uplinkBandwidth, downlinkBandwidth, ratePerMips, powerModel);
         }
-
-
     @Override
     protected void processOtherEvent(SimEvent ev) {
         switch (ev.getTag()) {
@@ -46,17 +42,16 @@ public class AuctioneerDevice extends Device {
                 findMatchesPeriodically();
                 break;
             case FogEvents.LAUNCH_MODULE:
-                this.send(this.getId(), 10, FogEvents.FIND_MATCHES_PERIODICALLY);
+                this.send(this.getId(), 20, FogEvents.FIND_MATCHES_PERIODICALLY);
                 processModuleArrival(ev);
                 break;
-
             default:
                 super.processOtherEvent(ev);
                 break;
         }
     }
-    protected void handleTaskInfo(SimEvent ev){
 
+    protected void handleTaskInfo(SimEvent ev){
         Tuple tuple = (Tuple) ev.getData();
         tupleList.add(tuple);
     }
@@ -79,21 +74,18 @@ public class AuctioneerDevice extends Device {
         List<DeviceInfo> deviceInfos = edgeServerInfoList;
         double[][] tuplesPrefrences = new double[tuples.size()][deviceInfos.size()];
         double[][] edgeServerPriorities = new double[deviceInfos.size()][tuples.size()];
-
-//        if (!endProcess1) {
-            // we want to obtain score of each mobile and edge server in this loop
+        long edgeServerSQuota[] = new long[deviceInfos.size()];
+        double[][] tuplesRequiredMipsOnEachEdgeServer= new double[tuples.size()][deviceInfos.size()];
+         // we want to obtain score of each mobile and edge server in this loop
             for (int i = 0; i < tuples.size(); i++) {
                 for (int j = 0; j < deviceInfos.size() ; j++) {
                     double inputSize = tuples.get(i).getCloudletFileSize();
-
                     double cpuLength = tuples.get(i).getCloudletLength();
                     long mipsOfSourceDevice= tuples.get(i).getMipsOfSourceDevice();
                     //compute time and energy when tuple execute locally
                     double t_local =  cpuLength/mipsOfSourceDevice;
                     double e_local = cpuLength * tuples.get(i).getBusyPowerOfSourceDevice();
-
                     double cost_local= t_local + e_local;
-
                     double distance_ij= calculateDistance(tuples.get(i).getSourcexCoordinate(),
                             tuples.get(i).getSourceyCoordinate(),
                             deviceInfos.get(j).getxCoordinate(),
@@ -103,7 +95,8 @@ public class AuctioneerDevice extends Device {
 //                    long r_ij= B_ij log(1+ P_i*H_ij/sigma^2)
                     double H_ij = 127 + 30 * log2(distance_ij); //the channel power gain
                     double noisePower = dbm2watt(-100); //-100 in dBm to watt //The power of White Gaussian Noise
-
+                    //Mahla Noise Power
+                    //double noisePower = 2 * Math.pow(10, -13);
                     double r_ij = tuples.get(i).getUpLinkBandwidth() *
                             log2(1+ tuples.get(i).getTransmissionPowerOfSourceDevice()* H_ij / noisePower);
                     double t_ij_transmit = inputSize / r_ij;
@@ -117,23 +110,39 @@ public class AuctioneerDevice extends Device {
 
                     double edgeServer_bid = deviceInfos.get(j).getBidPrice();
 
-                    double cost_offload_ij_for_tuple = t_ij_offload + e_ij_offload + edgeServer_bid;
+                    double cost_offload_ij_for_tuple = -(1 / 3.0) * t_ij_offload -(1 / 3.0) * e_ij_offload -(1 / 3.0) * edgeServer_bid;
 
-                    tuplesPrefrences[i][j] = 1 / cost_offload_ij_for_tuple;
 
+                    tuplesPrefrences[i][j] = cost_offload_ij_for_tuple;
+
+                    double deadline = tuples.get(i).getParentDeadline();
+                    double timeForExecution = deadline - t_ij_transmit;
+                    double numberOfMipsRequired;
+                    if (timeForExecution > 0) {
+                        numberOfMipsRequired = cpuLength/ timeForExecution;
+
+                    }else {
+                        numberOfMipsRequired =0;
+                        timeForExecution =0;
+
+                    }
+                    tuplesRequiredMipsOnEachEdgeServer[i][j]= numberOfMipsRequired;
                     double tuple_bid = tuples.get(i).getTupleBidPrice();
-
-                    double cost_for_edgeServer = 0.5 * tuple_bid + 0.5 * distance_ij ;
-
-                    edgeServerPriorities[j][i] = 1 / cost_for_edgeServer ;
-
+                    double cost_for_edgeServer = (1 / 2.0) * tuple_bid -(1 / 2.0) * distance_ij ;
+                    edgeServerPriorities[j][i] = cost_for_edgeServer ;
+                    edgeServerSQuota[j]= deviceInfos.get(j).getMips();
                 }
-
             }
         int[][] tuplesPrefrences1 = sortRowWise(tuplesPrefrences);
         int[][] edgeServerPriorities1 = sortRowWise(edgeServerPriorities);
-        int[] matches = Ttcmmech(tuplesPrefrences1.length,edgeServerPriorities1.length, tuplesPrefrences1,edgeServerPriorities1);
-        //in this phase auctioneer must response to mobiles that witch edge server is the best match for them
+//        int[][] tuplesPrefrences1 = {{3,2,1,0},{2,1,3,0},{3,2,1,0},{3,2,1,0},{1,2,3,0} };
+//        int[][] edgeServerPriorities1 = {{4,2,1,3,0},{1,2,4,3,0},{4,1,2,3,0},{3,2,1,4,0}};
+//       long edgeServerSQuota[]={600,200,100,50};
+//        int[][] tuplesRequiredMipsOnEachEdgeServer1={{400,100,300,100},{100,200,100,200},{300,100,200,100},{500,100,200,100},{500,200,300,100}};
+
+
+        int[] matches = Ttcmmech(tuplesPrefrences1.length,edgeServerPriorities1.length, tuplesPrefrences1,edgeServerPriorities1,edgeServerSQuota,tuplesRequiredMipsOnEachEdgeServer);
+        //in this phase auctioneer must response to mobiles that which edge server is the best match for them
         for (int i = 0; i < matches.length; i++) {
             Tuple tuple= tupleList.get(i);
             if(matches[i]==-1){
@@ -154,7 +163,47 @@ public class AuctioneerDevice extends Device {
 //            send(this.getId(), 10, FogEvents.FIND_MATCHES_PERIODICALLY);
         }
 
-//    }
+    public int[] Ttcmmech(int n, int m, int[][] tuplePrefs, int[][] serverPrefs, long[] serversQuota,double[][] tuplesRequiredMipsOnEachEdgeServer) {
+        int[] choice = new int[n];
+        int num = 0;     //keep track the num of tuples who have been allocated
+        Map<Integer, ArrayList<Integer>> tupleRemain = new HashMap<Integer, ArrayList<Integer>>();    //for storing the tuples who are not allocated
+        Map<Integer, ArrayList<Integer>> serverRemain = new HashMap<Integer, ArrayList<Integer>>();  //for storing servers who have seats remains
+        long [] counter = new long[m];          //keep track how much mips are still available at this server
+
+        for(int i=0;i<n;i++){                    //initialization
+            choice[i] = -1;
+            ArrayList<Integer> ls = new ArrayList<>();
+            for(int j=0; j<m; j++){
+                ls.add(tuplePrefs[i][j]);
+            }
+            tupleRemain.put(i,ls);
+        }
+        for(int i=0;i<m;i++){             //initialization
+            counter[i] = serversQuota[i];
+            ArrayList<Integer> ls = new ArrayList<>();
+            for(int j=0;j<n;j++){
+                ls.add(serverPrefs[i][j]);
+            }
+            serverRemain.put(i,ls);
+        }
+        while (!tupleRemain.isEmpty() && !serverRemain.isEmpty()){            //if there are still tuples who are not allocated
+            HashMap<Integer,Integer> tupleChoice = new HashMap<>();        //for storing the new matching pairs in this step
+            int tpId = tupleRemain.keySet().iterator().next();;
+            strongConnected(tpId, true, tupleRemain, serverRemain, tupleChoice, counter, tuplesRequiredMipsOnEachEdgeServer);      // find the circle which include this school node if exist
+            num += tupleChoice.keySet().size();
+            Iterator<Integer> keyTpl = tupleChoice.keySet().iterator();    //use the tupleChoice for updating the final choice table and the remaining tuples and servers
+            while (keyTpl.hasNext()) {
+                int tplId = keyTpl.next();
+                int srvId = tupleChoice.get(tplId);
+                choice[tplId] = srvId;       //update the tuple choice table
+                if (num != n) {
+                    updateRemain(tplId, srvId, tupleRemain, serverRemain, counter, tuplesRequiredMipsOnEachEdgeServer);   //updating the remaining tuples and servers
+                }
+            }
+        }
+
+        return choice;
+    }
 
     static int[][] sortRowWise(double m[][]) {
         int[][] x= new int[m.length][m[0].length];
@@ -163,10 +212,9 @@ public class AuctioneerDevice extends Device {
         for (int i = 0; i < m.length; i++) {
             // loop for column of matrix
             for (int j = 0; j < m[i].length; j++) {
-
                 // loop for comparison and swapping
                 for (int k = 0; k < m[i].length - j - 1; k++) {
-                    if (m[i][k] > m[i][k + 1]) {
+                    if (m[i][k] < m[i][k + 1]) {
                         //swapping of elements
                         double t = m[i][k];
                         m[i][k] = m[i][k + 1];
@@ -179,109 +227,100 @@ public class AuctioneerDevice extends Device {
                 }
             }
         }
-                return x;
+        return x;
     }
 
     static void fillDown(int[][] grid) {
         for (int i = 0 ; i < grid.length ; i++){
             for (int j = 0 ; j < grid[i].length ; j++) {
-                grid[i][j] = j+1;
+                grid[i][j] = j;
             }
         }
     }
 
-    public int[] Ttcmmech(int n, int m, int[][] tuplePrefs, int[][] serverPrefs) {
-        int[] choice = new int[n];
-        int num = 0;     //keep track the num of tuples who have been allocated
-        Map<Integer, ArrayList<Integer>> tupleRemain = new HashMap<Integer, ArrayList<Integer>>();    //for storing the tuples who are not allocated
-        Map<Integer, ArrayList<Integer>> serverRemain = new HashMap<Integer, ArrayList<Integer>>();  //for storing servers who have seats remains
-        for(int i=0;i<n;i++){                    //initialization
-            choice[i] = -1;
-            ArrayList<Integer> ls = new ArrayList<>();
-            for(int j=0; j<m; j++){
-                ls.add(tuplePrefs[i][j]);
+
+    public static void strongConnected(int vertexId,boolean isTuple, Map<Integer, ArrayList<Integer>> tplRemain,Map<Integer, ArrayList<Integer>>srvRemain,
+                                       Map<Integer,Integer> tplChoice, long[] serversQuota,double[][] tuplesRequiredMipsOnEachEdgeServer) {
+
+        if (isTuple) {
+            String toAddTuple = "tpl-" + vertexId;
+            if (!graph.contains(toAddTuple)) {
+                graph.add(toAddTuple);
+                int srvId = tplRemain.get(vertexId).get(0);
+                strongConnected(srvId, false, tplRemain, srvRemain, tplChoice, serversQuota, tuplesRequiredMipsOnEachEdgeServer);      // find the circle which include this school node if exist
             }
-            tupleRemain.put(i+1,ls);
-        }
-        for(int i=0;i<m;i++){             //initialization
-            ArrayList<Integer> ls = new ArrayList<>();
-            for(int j=0;j<n;j++){
-                ls.add(serverPrefs[i][j]);
+            else {
+                graph.add(toAddTuple);
+                for (int i = graph.indexOf(toAddTuple); i < graph.size() - 1; i += 2) {
+                    String valueOfTuple = graph.get(i);
+                    String valueOfServer = graph.get(i + 1);
+                    int tupleId = Integer.parseInt(valueOfTuple.substring(0, 0) + valueOfTuple.substring(4, valueOfTuple.length()));
+                    int serverId = Integer.parseInt(valueOfServer.substring(0, 0) + valueOfServer.substring(4, valueOfServer.length()));
+                    tplChoice.put(tupleId, serverId);
+                }
+                graph.clear();
             }
-            serverRemain.put(i+1,ls);
         }
-        while (!tupleRemain.isEmpty() && !serverRemain.isEmpty()){            //if there are still tuples who are not allocated
-            HashMap<Integer,Integer> tupleChoice = new HashMap<>();        //for storing the new matching pairs in this step
-            findAllCircles(tupleRemain,serverRemain,tupleChoice);              //find all the circles in this step and find the ner matching pairs
-            num += tupleChoice.keySet().size();
-            Iterator<Integer> keyTpl = tupleChoice.keySet().iterator();    //use the tupleChoice for updating the final choice table and the remaining tuples and servers
-            while (keyTpl.hasNext()){
-                int tplId = keyTpl.next();
-                int srvId = tupleChoice.get(tplId);
-                choice[tplId-1] = srvId;       //update the tuple choice table
-                if(num!=n){
-                    updateRemain(tplId,srvId,tupleRemain,serverRemain);   //updating the remaining tuples and servers
+        //////////////////////////////////////////////////////////////////////////////////////////////
+
+        else if (!isTuple) {
+            String lastValueOfGraph = graph.get(graph.size() - 1);
+            String lastTupleId = lastValueOfGraph.substring(0, 0) + lastValueOfGraph.substring(4, lastValueOfGraph.length());
+            int lastTupleIdToInt = Integer.parseInt(lastTupleId);
+            Iterator<Integer> keyIter = tplRemain.get(lastTupleIdToInt).iterator();
+            while (keyIter.hasNext()) {
+                int sId = keyIter.next();
+            if (tuplesRequiredMipsOnEachEdgeServer[lastTupleIdToInt][sId] <= serversQuota[sId]) {
+                String toAddServer = "srv-" + sId;
+                if (!graph.contains(toAddServer)) { ///if dont create a cycle
+                    graph.add(toAddServer);
+                    int tplId = srvRemain.get(sId).get(0);
+                    strongConnected(tplId, true, tplRemain, srvRemain, tplChoice, serversQuota, tuplesRequiredMipsOnEachEdgeServer);      // find the circle which include this school node if exist
+                }
+                else {     //if create a cycle
+                    graph.add(toAddServer);
+                    for (int i = graph.indexOf(toAddServer) + 1; i < graph.size() - 1; i += 2) {
+                        String valueOfTuple = graph.get(i);
+                        String valueOfServer = graph.get(i + 1);
+                        int tupleId = Integer.parseInt(valueOfTuple.substring(0, 0) + valueOfTuple.substring(4, valueOfTuple.length()));
+                        int serverId = Integer.parseInt(valueOfServer.substring(0, 0) + valueOfServer.substring(4, valueOfServer.length()));
+                        tplChoice.put(tupleId, serverId);
+                    }
+                    graph.clear();
+                }
+                break;
+            }
+
+            }
+            if(keyIter.hasNext()==false && graph.size()>0) {
+                String valueOfGraph = graph.get(graph.size() - 1);
+                String tupleId = valueOfGraph.substring(0, 0) + valueOfGraph.substring(4);
+                int tupleIdToInt = Integer.parseInt(tupleId);
+                if (tplChoice.get(tupleIdToInt) == null) {
+                    tplChoice.put(lastTupleIdToInt, -1);
+                    graph.clear();
+
                 }
             }
-        }
-        return choice;
-    }
 
-    public static void findAllCircles(Map<Integer, ArrayList<Integer>> tupleRemain,Map<Integer, ArrayList<Integer>>serverRemain,HashMap<Integer, Integer> tupleChoice){
-        Map<Integer,Boolean>  srvRead = new HashMap<>();                 //keep track if a certain server node has been read
-        Iterator<Integer> srvKey = serverRemain.keySet().iterator();        //initialization
-        while(srvKey.hasNext()){
-            int srvId = srvKey.next();
-            srvRead.put(srvId,false);
-        }
-        Iterator<Integer> keyIter = serverRemain.keySet().iterator();
-        while(keyIter.hasNext()){                                     //ensure that every server node will be considered
-            int srvId = keyIter.next();
-            Stack<Integer> srvStack = new Stack<>();               //store the non-read nodes which can be reached from this server node
-            strongConnected(srvId,srvRead,tupleRemain,serverRemain,tupleChoice,srvStack);      // find the circle which include this server node if exist
-            while(!srvStack.isEmpty()){                //update
-                int term = srvStack.pop();
-                srvRead.replace(term,true);
-            }
         }
     }
 
-    public static void strongConnected(int srvId, Map<Integer,Boolean>srvRead, Map<Integer, ArrayList<Integer>> tplRemain,Map<Integer, ArrayList<Integer>>srvRemain,
-                                       Map<Integer,Integer> tplChoice, Stack<Integer> srvStack){
-        if(!srvRead.get(srvId)){
-            if(!srvStack.contains(srvId)){     //if it's not read
-                srvStack.push(srvId);
-                //srvRead[srvId-1] = true;
-                int tplId = srvRemain.get(srvId).get(0);
-                int srvNext = tplRemain.get(tplId).get(0);
-                strongConnected(srvNext,srvRead,tplRemain,srvRemain,tplChoice,srvStack);
-            }
-            else{       //if it is already in the stack, we can find a circle
-                int srv = srvStack.pop();
-                int w = srvId;
-                while(srv!=srvId){
-                    int tpl = srvRemain.get(srv).get(0);
-                    tplChoice.put(tpl,w);
-                    srvRead.replace(srv,true);
-                    w = srv;
-                    srv = srvStack.pop();
-                }
-                srvRead.replace(srvId,true);
-                tplChoice.put(srvRemain.get(srvId).get(0),w);
-            }
-        }
-    }
-
-    public  static void updateRemain(int tplId, int srvId, Map<Integer, ArrayList<Integer>> tplRemain, Map<Integer, ArrayList<Integer>>srvRemain){
+    public  static void updateRemain(int tplId, int srvId, Map<Integer, ArrayList<Integer>> tplRemain, Map<Integer, ArrayList<Integer>>srvRemain, long [] counter, double[][] tuplesRequiredMipsOnEachEdgeServer){
         tplRemain.remove(tplId);
-        //remove this server from the list
-        srvRemain.remove(srvId);
-        Iterator<Integer> keyTpl = tplRemain.keySet().iterator();
-        while(keyTpl.hasNext()){
-            int tplKey = keyTpl.next();
-            ArrayList<Integer> srvList = tplRemain.get(tplKey);
-            int index = srvList.indexOf(srvId);
-            srvList.remove(index);
+        if (srvId!=-1) {
+            counter[srvId] -= tuplesRequiredMipsOnEachEdgeServer[tplId][srvId];
+            if (counter[srvId] <= 0) {
+                //remove this server from the list
+                srvRemain.remove(srvId);
+                Iterator<Integer> keyTpl = tplRemain.keySet().iterator();
+                while (keyTpl.hasNext()) {
+                    int tplKey = keyTpl.next();
+                    ArrayList<Integer> srvList = tplRemain.get(tplKey);
+                    int index = srvList.indexOf(srvId);
+                    srvList.remove(index);
+                }
+            }
         }
         //remove this tuple from the list
         Iterator<Integer> keySrv = srvRemain.keySet().iterator();
@@ -293,9 +332,6 @@ public class AuctioneerDevice extends Device {
         }
     }
 
-    private double calculateDistance(double sourcexCoordinate,double sourceyCoordinate, double destinationxCoordinate,double destinationyCoordinate) {
-        return Math.sqrt(Math.pow(sourcexCoordinate-destinationxCoordinate, 2.00)+
-                Math.pow(sourceyCoordinate -destinationyCoordinate, 2.00));}
     // Function to calculate the log base 2 of an integer
     public static double log2(double N)
     {
@@ -303,9 +339,12 @@ public class AuctioneerDevice extends Device {
         // calculate log2 N indirectly
         // using log() method
         double result = (Math.log(N) / Math.log(2));
-
         return result;
     }
+
+    private double calculateDistance(double sourcexCoordinate,double sourceyCoordinate, double destinationxCoordinate,double destinationyCoordinate) {
+        return Math.sqrt(Math.pow(sourcexCoordinate-destinationxCoordinate, 2.00)+
+                Math.pow(sourceyCoordinate -destinationyCoordinate, 2.00));}
 
     private double dbm2watt(double input) {
         double pow = input / 10;

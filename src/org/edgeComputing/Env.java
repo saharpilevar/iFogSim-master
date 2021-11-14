@@ -21,7 +21,6 @@ public class Env {
     public final static String TUPLE_TYPE_TASK_INFO = "TASK_INFO";
     public final static String TUPLE_TYPE_EDGE_SERVER_INFO = "EDGE_SERVER_INFO";
     public final static String TUPLE_TYPE_MATCH_RESPONSE_TO_MOBILE = "MATCH_RESPONSE_TO_MOBILE";
-//    public final static String TUPLE_TYPE_MATCH_RESPONSE_TO_EDGE_SERVER = "MATCH_RESPONSE_TO_EDGE_SERVER";
 
     public final static String BROKER_NAME = "BROKER";
 

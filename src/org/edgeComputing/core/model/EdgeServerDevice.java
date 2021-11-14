@@ -111,12 +111,10 @@ public class EdgeServerDevice extends Device {
     protected void handleAuctioneerResponse(SimEvent ev){
             }
 
-    @Override
     protected void handleEdgeServerInfo(SimEvent ev) {
 
     }
 
-    @Override
     protected void handleTaskInfo(SimEvent ev) {
 
     }
@@ -137,7 +135,7 @@ public class EdgeServerDevice extends Device {
             info.setyCoordinate(this.getyCoordinate());
             send(parentId, getUplinkLatency(), FogEvents.RECEIVE_DEVICE_INFO, info);
             send(this.getId(), heartBeatDelay, FogEvents.SEND_PERIODIC_DEVICE_INFO);
-//            endProcess =true;
+            endProcess =true;
         }
 
     }

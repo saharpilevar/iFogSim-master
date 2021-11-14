@@ -87,15 +87,8 @@ public class TaskGeneratorDevice extends Sensor {
             if (edge.getSource().equals(getTupleType()))
                 _edge = edge;
         }
-
-//        List<Task> subTasks1 = this.getReadySubTaskList();
         Map<String, List<Task>> subTasks = this.getReadySubTaskList();
-
         List<Tuple> tuples = new ArrayList<>();
-//        if(subTasks.size() == 0 && this.endProcess()){
-//            send(this.getGatewayDeviceId(), getLatency(), FogEvents.END_PROCESS);
-//        }
-//        Logger.debug(getName(), subTasks.size() + " ready tuple found!");
         for (String taskId : subTasks.keySet()) {
             for (Task subTask : subTasks.get(taskId)) {
                 Tuple tuple = new Tuple(getAppId(), FogUtils.generateTupleId(), Tuple.UP, subTask.getCpuLength(),
@@ -117,13 +110,10 @@ public class TaskGeneratorDevice extends Sensor {
                 if (task.getEndTaskId().equals(subTask.getId())) {
                     tuple.setDoneTuple(true);
                 }
-            tuple.setParentDeadline(task.getDeadline());
-
-
+                tuple.setParentDeadline(task.getDeadline());
                 int actualTupleId = updateTimings(getSensorName(), tuple.getDestModuleName());
                 tuple.setActualTupleId(actualTupleId);
                 tuple.setDestinationId(this.getGatewayDeviceId());
-
                 tuples.add(tuple);
                 subTask.setTuple(tuple);
                 subTask.setStatus(TaskStatus.DOING);
@@ -182,8 +172,6 @@ public class TaskGeneratorDevice extends Sensor {
         }
         return readySubTasks;
     }
-
-
 
     public void doneTuple(Tuple tuple){
         List<Task> tasks = runningSubTasks.stream().filter(
