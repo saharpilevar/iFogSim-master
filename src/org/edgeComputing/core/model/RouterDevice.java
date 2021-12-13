@@ -54,33 +54,13 @@ public class RouterDevice extends Device {
     }
 
     @Override
-    protected void processTupleArrival(SimEvent ev) {
-        Tuple tuple = (Tuple) ev.getData();
-
-        send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), FogEvents.TUPLE_ACK);
-
-//        Logger.debug(getName(),
-//                "Received tuple " + tuple.getCloudletId() + "with tupleType = " + tuple.getTupleType() + "\t| Source : " +
-//                        CloudSim.getEntityName(ev.getSource()) + "|Dest : " + CloudSim.getEntityName(
-//                        ev.getDestination()));
-
-        if(tuple.getTupleType().equals(Env.TUPLE_TYPE_MATCH_RESPONSE_TO_MOBILE) || tuple.getTupleType().equals(Env.TUPLE_TYPE_MATCH_RESPONSE_TO_EDGE_SERVER)){
-            this.forwardTuple(ev);
-        }
-        else if(tuple.getTupleType().equals(Env.TUPLE_TYPE_TASK_INFO)){
-            this.forwardTupleToAuctioneer(ev);
-        }
-
-        else if(tuple.getTupleType().equals(Env.TUPLE_TYPE_EDGE_SERVER_INFO)){
-            this.forwardEdgeServerInfoToAuctioneer(ev);
-        }
-    }
-
-    @Override
     protected void processOtherEvent(SimEvent ev) {
         switch (ev.getTag()) {
             case FogEvents.RECEIVE_DEVICE_INFO:
                 forwardEdgeServerInfoToAuctioneer(ev);
+                break;
+            case FogEvents.END_PROCESS:
+                deviceEndProcess(ev);
                 break;
 
             default:
@@ -88,48 +68,72 @@ public class RouterDevice extends Device {
                 break;
         }
     }
-    private void forwardTuple(SimEvent ev){
-        Tuple tuple = (Tuple) ev.getData();
-            sendDown(tuple, tuple.getDestinationId());
+    protected void handleTasks(SimEvent ev) {
+        this.forwardTuple(ev);
     }
 
+    protected void handleResponse(SimEvent ev) {
+        this.forwardMatchResponseToMobile(ev);
+    }
+
+    protected void handleTaskInfo(SimEvent ev) {
+        this.forwardTupleToAuctioneer(ev);
+    }
+    protected void handleAuctioneerResponse(SimEvent ev) {
+        this.forwardMatchResponseToMobile(ev);
+    }
+    protected void handleEdgeServerInfo(SimEvent ev) {
+        this.forwardEdgeServerInfoToAuctioneer(ev);
+    }
+    ////////////////////////////////////////////////////
     private void forwardTupleToAuctioneer(SimEvent ev){
         Tuple tuple = (Tuple) ev.getData();
-
-        if(tuple.getDestModuleName().equals("AUCTIONEER")){
-            //send(auctioneerId,0L,tuple);
-            send(Env.DEVICE_AUCTIONEER,0, FogEvents.TUPLE_ARRIVAL, tuple);
+        if(tuple.getDestModuleName().equals(Env.DEVICE_AUCTIONEER)){
+            //3.send tuple information to Auctioneer
+            sendUp(tuple);
         }
     }
 
+    private void forwardMatchResponseToMobile(SimEvent ev){
+        Tuple tuple = (Tuple) ev.getData();
+        //7.send result of auction to mobile device
+        sendDown(tuple, tuple.getSourceDeviceId());
+    }
+
+    private void forwardTuple(SimEvent ev){
+        Tuple tuple = (Tuple) ev.getData();
+
+        if(tuple.getDestModuleName().equals("Cloud")){
+            sendUp(tuple);
+        }
+
+        else {
+            //9. send tuple to edge server
+            sendDown(tuple, tuple.getDestinationId());
+        }
+    }
     private void forwardEdgeServerInfoToAuctioneer(SimEvent ev){
         DeviceInfo deviceInfo = (DeviceInfo) ev.getData();
+
         send(Env.DEVICE_AUCTIONEER, 0, FogEvents.RECEIVE_DEVICE_INFO, deviceInfo);
 
     }
 
-    @Override
-    protected void handleEdgeServerInfo(SimEvent ev) {
-
+    private void deviceEndProcess(SimEvent ev){
+        int sourceId = ev.getSource();
+        mobileDevicesMap.replace(sourceId, Boolean.FALSE);
+        boolean endProcess = true;
+        for(int id : mobileDevicesMap.keySet()){
+            if(mobileDevicesMap.get(id)){
+                endProcess = false;
+                break;
+            }
+        }
+        if(endProcess){
+            for(int id: edgeServersList) {
+                this.sendNow(id, FogEvents.END_PROCESS);
+            }
+        }
     }
 
-    @Override
-    protected void handleAuctioneerResponse(SimEvent ev) {
-
-    }
-
-    @Override
-    protected void handleResponse(SimEvent ev) {
-
-    }
-
-    @Override
-    protected void handleTaskInfo(SimEvent ev) {
-
-    }
-
-    @Override
-    protected void handleTasks(SimEvent ev) {
-
-    }
 }

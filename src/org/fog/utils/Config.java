@@ -13,4 +13,17 @@ public class Config {
 	public static double FOG_DEVICE_COST_PER_MEMORY = 0.05;
 	public static double FOG_DEVICE_COST_PER_STORAGE = 0.001;
 	public static double FOG_DEVICE_COST_PER_BW = 0.0;
+
+
+	public final static String PROJECT_PATH = "E:\\Eclipse_workSpace\\iFogSim-master";
+	public final static String OS_SEPARATOR = "\\";
+	public final static boolean MULTI_EPISODE = false;
+	public final static double CONTROLLER_COLLECT_DATA_INTERVAL = 10.0;
+
+
+
+	public static String getOutputPath(){
+		String path = PROJECT_PATH + OS_SEPARATOR + "output" + OS_SEPARATOR + "result";
+		return path;
+	}
 }

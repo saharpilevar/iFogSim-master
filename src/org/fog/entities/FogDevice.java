@@ -92,6 +92,10 @@ public class FogDevice extends PowerDatacenter {
 	protected double ratePerMips;
 	
 	protected double totalCost;
+
+	//distance parameters
+	protected double xCoordinate;
+	protected double yCoordinate;
 	
 	protected Map<String, Map<String, Integer>> moduleInstanceCount;
 	
@@ -984,4 +988,13 @@ public class FogDevice extends PowerDatacenter {
 			Map<String, Map<String, Integer>> moduleInstanceCount) {
 		this.moduleInstanceCount = moduleInstanceCount;
 	}
+
+	public double getxCoordinate() {
+		return xCoordinate;}
+	public void setxCoordinate(double xCoordinate) {
+		this.xCoordinate = xCoordinate;}
+	public double getyCoordinate() {
+		return yCoordinate;}
+	public void setyCoordinate(double yCoordinate) {
+		this.yCoordinate = yCoordinate;}
 }

@@ -1,35 +1,43 @@
 package org.edgeComputing.model;
 
+import org.apache.commons.math3.util.Pair;
 import org.edgeComputing.model.status.TaskStatus;
 import org.fog.entities.Tuple;
 
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Task {
     private String id;
     private List<Task> subTasks;
+    private String startSubTaskId;
+    private String endSubTaskId;
     private Long cpuLength = 1000L;
     private Long nwLength = 1000L;
     private Integer pesNumber = 1;
     private TaskStatus status;
     private Long outputSize = 0L;
     private Tuple tuple;
+    private double bidPrice;
+    private Double deadline = 10000000000000000000.0D;
+    private Map<String, Pair<Integer, Long>> previousTuplesInfo = new HashMap<>();
+
 
     public Task(String id) {
         this.id = id;
         this.status = TaskStatus.TODO;
     }
 
-    public Task(String id, Long cpuLength, Long nwLength, Integer pesNumber, Long outputSize) {
+    public Task(String id, Long cpuLength, Long nwLength, Integer pesNumber, Long outputSize, double bidPrice, String startSubTaskId, String endSubTaskId) {
         this.id = id;
         this.cpuLength = cpuLength;
         this.nwLength = nwLength;
         this.pesNumber = pesNumber;
         this.status = TaskStatus.TODO;
         this.outputSize = outputSize;
+        this.bidPrice = bidPrice;
+        this.startSubTaskId = startSubTaskId;
+        this.endSubTaskId = endSubTaskId;
     }
 
     public List<Task> getReadySubTask() {
@@ -96,6 +104,13 @@ public class Task {
         this.subTasks = subTasks;
     }
 
+    public double getBidPrice() {
+        return bidPrice;
+    }
+
+    public void setBidPrice(double bidPrice) {
+        this.bidPrice = bidPrice;
+    }
 
 
 
@@ -128,5 +143,39 @@ public class Task {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getEndTaskId() {
+        return this.endSubTaskId;
+    }
+
+    public String getStartTaskId() {
+        return this.startSubTaskId;
+    }
+
+    public Double getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(Double deadline) {
+        this.deadline = deadline;
+    }
+
+    public Map<String, Pair<Integer, Long>> getPreviousTuplesInfo() {
+        return previousTuplesInfo;
+    }
+    public void setPreviousTupleInfo(String id, Integer executorId, Long outputSize) {
+        this.previousTuplesInfo.put(id, new Pair<>(executorId, outputSize));
+    }
+
+    public void updateTaskDependenciesInfo(String subTaskId) {
+        List<Task> subTasks = this.subTasks.stream().filter(item -> item.getId().equals(subTaskId)).collect(
+                Collectors.toList());
+        if (subTasks.size() > 0) {
+            for (Task subTask : subTasks) {
+                subTask.setPreviousTupleInfo(subTask.getId(), subTask.getTuple().getExecutorId(),
+                        subTask.getOutputSize());
+            }
+        }
     }
 }

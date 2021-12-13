@@ -9,6 +9,9 @@ public class DeviceInfo {
     private Double networkDelay;
     private Long mips;
     private Integer ram;
+    private Double bidPrice;
+    private double xCoordinate;
+    private double yCoordinate;
 
 
     public String getName() {
@@ -73,6 +76,23 @@ public class DeviceInfo {
     public void setRam(int ram) {
         this.ram = ram;
     }
+
+    public Double getBidPrice() {
+        return bidPrice;
+    }
+
+    public void setBidPrice(Double bidPrice) {
+        this.bidPrice = bidPrice;
+    }
+
+    public double getxCoordinate() {
+        return xCoordinate;}
+    public void setxCoordinate(double xCoordinate) {
+        this.xCoordinate = xCoordinate;}
+    public double getyCoordinate() {
+        return yCoordinate;}
+    public void setyCoordinate(double yCoordinate) {
+        this.yCoordinate = yCoordinate;}
 
     @Override
     public String toString() {

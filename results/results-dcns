@@ -8,7 +8,7 @@ fog
 1
 [motion_detector, object_detector, object_tracker] ---> 11.153455882353773
 2
-[object_tracker, PTZ_CONTROL] ---> 3.1300000000007087
+[object_r, PTZ_CONTROL] ---> 3.1300000000007087
 =========================================
 cloud : Energy Consumed = 1750.0000000009265
 proxy-server : Energy Consumed = 0.0

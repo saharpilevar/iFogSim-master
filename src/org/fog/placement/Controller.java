@@ -21,6 +21,8 @@ import org.fog.utils.FogUtils;
 import org.fog.utils.NetworkUsageMonitor;
 import org.fog.utils.TimeKeeper;
 
+import org.edgeComputing.Env;
+
 public class Controller extends SimEntity{
 	
 	public static boolean ONLY_CLOUD = false;

@@ -1,5 +1,11 @@
 package org.edgeComputing;
 
+import org.edgeComputing.model.DeviceInfo;
+import org.fog.entities.FogDevice;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class Env {
     public final static String DEVICE_EDGE_SERVER = "EDGE_SERVER";
     public final static String DEVICE_USER_EQUIPMENT = "USER_EQUIPMENT";
@@ -15,9 +21,11 @@ public class Env {
     public final static String TUPLE_TYPE_TASK_INFO = "TASK_INFO";
     public final static String TUPLE_TYPE_EDGE_SERVER_INFO = "EDGE_SERVER_INFO";
     public final static String TUPLE_TYPE_MATCH_RESPONSE_TO_MOBILE = "MATCH_RESPONSE_TO_MOBILE";
-    public final static String TUPLE_TYPE_MATCH_RESPONSE_TO_EDGE_SERVER = "MATCH_RESPONSE_TO_EDGE_SERVER";
 
     public final static String BROKER_NAME = "BROKER";
 
     public final static String MASTER_CONTROLLER_NAME = "MASTER_CONTROLLER";
+
+    public static List<DeviceInfo> deviceInfoList = new ArrayList<>();
+    public static List<FogDevice> fogDevices = new ArrayList<>();
 }
