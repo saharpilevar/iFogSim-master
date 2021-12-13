@@ -17,6 +17,16 @@ public class Web3JClient {
     private static Web3jService service = new HttpService("http://localhost:8545"); // put fullnode url here
     private static Web3j web3j = Web3j.build(service);
 
+    public Web3JClient() {
+        super()
+        this.contract = this.web3j.connecttoContract()
+    }
+
+    /* */
+    public void registerMobileTuple() {
+        
+    }
+
     public static BigInteger GetLastBlockNumber() 
     {
         try {
@@ -27,6 +37,7 @@ public class Web3JClient {
         }
         return null;
     }
+
 
     public static void main(String[] args) throws Exception {
 // test function here
