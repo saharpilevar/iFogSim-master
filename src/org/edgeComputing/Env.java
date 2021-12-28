@@ -27,5 +27,7 @@ public class Env {
     public final static String MASTER_CONTROLLER_NAME = "MASTER_CONTROLLER";
 
     public static List<DeviceInfo> deviceInfoList = new ArrayList<>();
+    public static int numberOfEdgeServers = 0;
+
     public static List<FogDevice> fogDevices = new ArrayList<>();
 }

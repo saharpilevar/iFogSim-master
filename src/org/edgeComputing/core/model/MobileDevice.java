@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MobileDevice extends Device {
 
@@ -85,6 +86,7 @@ public class MobileDevice extends Device {
                 Output.writeResult();
                 this.sendNow(this.getParentId(), FogEvents.END_PROCESS);
                 break;
+
             case FogEvents.FAIL_TASK:
                 this.failTask(ev);
                 break;
@@ -106,7 +108,7 @@ public class MobileDevice extends Device {
             tuple.setTupleBidPrice(tuple.getTupleBidPrice());
             tuple.setSourceDeviceId(this.getId());
             tuple.setDirection(Tuple.UP);
-            tuple.setSrcModuleName(Env.DEVICE_USER_EQUIPMENT);
+            tuple.setSrcModuleName(this.getName());
             tuple.setSourcexCoordinate(this.getxCoordinate());
             tuple.setSourceyCoordinate(this.getyCoordinate());
             tuple.setUpLinkBandwidth(getUplinkBandwidth());
@@ -117,6 +119,7 @@ public class MobileDevice extends Device {
 
     protected void handleAuctioneerResponse(SimEvent ev){
         Tuple tuple = (Tuple) ev.getData();
+
         this.stateMap.put(tuple.getCloudletId(), copyMap(envState));
         if (getHost().getVmList().size() > 0) {
             final AppModule operator = (AppModule) getHost().getVmList().get(0);
@@ -132,10 +135,11 @@ public class MobileDevice extends Device {
             }
         }
         int destinationId = tuple.getDestinationId();
-        String tupleId=tuple.getTaskId();
-//        this.send(this.getId(), tuple.getParentDeadline(), FogEvents.FAIL_TASK, tuple);
+        String tupleId = tuple.getTaskId();
+        this.send(this.getId(), tuple.getParentDeadline(), FogEvents.FAIL_TASK, tuple);
+//        send(tuple.getDestinationId(), tuple.getParentDeadline(), FogEvents.FAIL_TASK, tuple);
 
-//        tuple.setActualSourceId(this.getId());
+        tuple.setActualSourceId(this.getId());
         tuple.setTupleType(Env.TUPLE_TYPE_TASK);
         if (destinationId == this.getId()) {
             int vmId = -1;
@@ -160,9 +164,6 @@ public class MobileDevice extends Device {
         } else if (destinationId != this.getId()) {
             if (tuple.getDirection() == Tuple.UP) {
                 tuple.setDestinationId(destinationId);
-                tuple.setDestModuleName(Env.DEVICE_EDGE_SERVER);
-                tuple.setSrcModuleName(Env.DEVICE_USER_EQUIPMENT);
-//                tuple.setTupleType(Env.TUPLE_TYPE_TASK);
                 //8. send tuple to router for offloading to edge server
                 sendUp(tuple);
             } else if (tuple.getDirection() == Tuple.DOWN) {
@@ -174,6 +175,7 @@ public class MobileDevice extends Device {
 
     protected void handleResponse(SimEvent ev){
         Tuple tuple = (Tuple) ev.getData();
+
         if (tuple.isFailed())
             return;
         if (this.taskGeneratorDevice != null) {
@@ -196,14 +198,15 @@ public class MobileDevice extends Device {
         Tuple tuple = (Tuple) ev.getData();
         tuple.setFailed(true);
         tuple.setExecutorId(tuple.getDestinationId());
-        String executorName = "";
-        for (String key : edgeServersMap.keySet()) {
-            if (edgeServersMap.get(key).equals(tuple.getDestinationId())) {
-                executorName = key;
-            }
-        }
-        executorName = executorName.equals("") ? "UE" : executorName;
-        tuple.setExecutorName(executorName);
+        tuple.setExecutorName(tuple.getDestModuleName());
+//        String executorName = "";
+//        for (String key : edgeServersMap.keySet()) {
+//            if (edgeServersMap.get(key).equals(tuple.getDestinationId())) {
+//                executorName = key;
+//            }
+//        }
+//        executorName = executorName.equals("") ? "UE" : executorName;
+//        tuple.setExecutorName(executorName);
 
         if (this.taskGeneratorDevice != null) {
             sendNow(this.taskGeneratorDevice.getId(), FogEvents.FAIL_TASK, tuple);

@@ -161,6 +161,7 @@ public class Task {
         this.deadline = deadline;
     }
 
+
     public Map<String, Pair<Integer, Long>> getPreviousTuplesInfo() {
         return previousTuplesInfo;
     }

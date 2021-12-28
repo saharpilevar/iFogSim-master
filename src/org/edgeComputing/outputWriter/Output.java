@@ -1,5 +1,8 @@
 package org.edgeComputing.outputWriter;
 
+import org.cloudbus.cloudsim.Vm;
+import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.power.PowerHost;
 import org.edgeComputing.Env;
 
 import java.io.*;
@@ -8,6 +11,7 @@ import java.util.stream.Collectors;
 
 import org.edgeComputing.model.DeviceInfo;
 import org.edgeComputing.util.*;
+import org.fog.application.AppModule;
 import org.fog.entities.FogDevice;
 import org.fog.utils.Config;
 public class Output {
@@ -18,6 +22,9 @@ public class Output {
     public static Map<Double, List<Long>> transferredDataMap = new HashMap<>();
     public static Map<Double, List<Long>> mustBeTransferredDataMap = new HashMap<>();
     public static Map<Double, Map<String, Double>> consumedEnergyMap = new HashMap<>();
+    public static Map<Double, Map<String, Double>> utilizationMap = new HashMap<>();
+
+
     public static boolean isWritten = false;
 
     public static void writeResult() {
@@ -26,6 +33,7 @@ public class Output {
         writeTransferredDataInfo();
         writeLatencyInfo();
         writeTasksInfo();
+        writeUtilization();
     }
 
     public static void writeSubTasksInfo(){
@@ -127,6 +135,39 @@ public class Output {
                     totalEnergyConsumption += consumedEnergyMap.get(time).get(deviceName);
                 }
                 sb.append(totalEnergyConsumption);
+                sb.append("\n");
+            }
+            writer.write(sb.toString());
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+
+    }
+    public static void writeUtilization() {
+        try (PrintWriter writer = new PrintWriter(new File(
+                Config.getOutputPath() + Config.OS_SEPARATOR + "_Utilization.csv"))) {
+
+            List<String> deviceNames = Env.deviceInfoList.stream().map(DeviceInfo::getName).collect(Collectors.toList());
+            StringBuilder sb = new StringBuilder();
+            sb.append("time");
+            sb.append(",");
+            for (String deviceName : deviceNames) {
+                sb.append(deviceName);
+                sb.append(",");
+            }
+            sb.append("total");
+            sb.append('\n');
+
+            for(double time : utilizationMap.keySet()) {
+                double totalutilization = 0.0;
+                sb.append(time);
+                sb.append(",");
+                for (String deviceName : deviceNames) {
+                    sb.append(utilizationMap.get(time).get(deviceName));
+                    sb.append(',');
+                    totalutilization += utilizationMap.get(time).get(deviceName);
+                }
+                sb.append(totalutilization);
                 sb.append("\n");
             }
             writer.write(sb.toString());
@@ -286,5 +327,23 @@ public class Output {
             CEyMap.put(fogDevice.getName(), fogDevice.getEnergyConsumption());
         }
         consumedEnergyMap.put(time, CEyMap);
+
+        Map<String, Double> CEMap = new HashMap<>();
+        double totalMipsAllocated = 0;
+
+        for (FogDevice fogDevice : Env.fogDevices) {
+            for (PowerHost host : fogDevice.<PowerHost> getHostList()) {
+                for(final Vm vm : host.getVmList()){
+                    AppModule operator = (AppModule)vm;
+                    vm.updateVmProcessing(CloudSim.clock(), host.getVmScheduler()
+                            .getAllocatedMipsForVm(operator));
+                    totalMipsAllocated += host.getTotalAllocatedMipsForVm(vm);
+                }
+                double utilizationOfCpu = Math.min(1, totalMipsAllocated/host.getTotalMips());
+                CEMap.put(fogDevice.getName(), utilizationOfCpu);
+
+            }
+        }
+        utilizationMap.put(time, CEMap);
     }
 }

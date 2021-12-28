@@ -103,7 +103,7 @@ public class Controller extends SimEntity{
 			CloudSim.stopSimulation();
 			printTimeDetails();
 			printPowerDetails();
-			printCostDetails();
+//			printCostDetails();
 			printNetworkUsageDetails();
 			System.exit(0);
 			break;

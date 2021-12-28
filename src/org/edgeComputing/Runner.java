@@ -12,7 +12,6 @@ import java.nio.file.Paths;
 public class Runner {
 
 
-    //private final static String SUB_TASKS_GRAPH_CSV_PATH = "E:\\Eclipse_workSpace\\OffloadingEdgeComputing-initialize\\OffloadingEdgeComputing-initialize\\TestData\\SubTasksGraphs.csv";
     public static void main(String[] args){
         Path currentPath = Paths.get(System.getProperty("user.dir"));
         String CLOUD_CSV_PATH = Paths.get(currentPath.toString(), "TestData", "Cloud.csv").toString();

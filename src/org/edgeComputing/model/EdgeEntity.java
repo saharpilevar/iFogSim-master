@@ -13,6 +13,8 @@ public class EdgeEntity {
     protected Double busyPower;
     protected Double idlePower;
     private Double upLinkLatency;
+    protected Double xCoordinate;
+    protected Double yCoordinate;
 
     public String getNodeName() {
         return nodeName;
@@ -93,5 +95,20 @@ public class EdgeEntity {
 
     public void setUpLinkLatency(Double upLinkLatency) {
         this.upLinkLatency = upLinkLatency;
+    }
+
+    public Double getYCoordinate() {
+        return yCoordinate;
+    }
+
+    public void setYCoordinate(Double yCoordinate) {
+        this.yCoordinate = yCoordinate;
+    }
+    public Double getXCoordinate() {
+        return xCoordinate;
+    }
+
+    public void setXCoordinate(Double xCoordinate) {
+        this.xCoordinate = xCoordinate;
     }
 }

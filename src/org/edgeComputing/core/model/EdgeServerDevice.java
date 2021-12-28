@@ -21,7 +21,7 @@ import java.util.List;
 public class EdgeServerDevice extends Device {
     private double heartBeatDelay = 10;
     private double joinTime = 0;
-    private long mips = 0;
+    private double mips = 0;
     private int ram = 0;
     private double bidPrice = 0;
     private boolean endProcess = false;
@@ -53,6 +53,9 @@ public class EdgeServerDevice extends Device {
                 this.send(this.getId(), joinTime, FogEvents.SEND_PERIODIC_DEVICE_INFO);
                 processModuleArrival(ev);
                 break;
+//            case FogEvents.FAIL_TASK:
+//                pCloudletCancel(ev);
+//                break;
             case FogEvents.END_PROCESS:
                 this.endProcess = true;
                 break;
@@ -98,9 +101,9 @@ public class EdgeServerDevice extends Device {
 
         this.addTupleCloudletMap(tuple.getCloudletId(), tuple);
 
+
         tuple.setExecutorId(this.getId());
         tuple.setExecutorName(this.getName());
-//        tuple.setTupleType(Env.TUPLE_TYPE_RESPONSE);
     }
 
     protected void handleResponse(SimEvent ev){
@@ -128,6 +131,8 @@ public class EdgeServerDevice extends Device {
             info.setEnergyConsumption(this.getEnergyConsumption());
             info.setLastUtilization(this.lastUtilization);
             info.setNetworkDelay(this.uplinkLatency);
+//            info.setMips(this.getAvailableCapacity(1));
+
             info.setMips(this.mips);
             info.setRam(this.ram);
             info.setBidPrice(this.bidPrice);

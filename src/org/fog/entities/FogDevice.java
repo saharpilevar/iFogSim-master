@@ -698,7 +698,7 @@ public class FogDevice extends PowerDatacenter {
 		String destModule = tuple.getDestModuleName();
 		List<AppLoop> loops = app.getLoops();
 		for(AppLoop loop : loops){
-			if(loop.hasEdge(srcModule, destModule) && loop.isEndModule(destModule)){				
+			if(loop.hasEdge(srcModule, destModule) && loop.isEndModule(destModule)){
 				Double startTime = TimeKeeper.getInstance().getEmitTimes().get(tuple.getActualTupleId());
 				if(startTime==null)
 					break;
@@ -746,9 +746,9 @@ public class FogDevice extends PowerDatacenter {
 		updateAllocatedMips(moduleName);
 		processCloudletSubmit(ev, false);
 		updateAllocatedMips(moduleName);
-		/*for(Vm vm : getHost().getVmList()){
-			Logger.error(getName(), "MIPS allocated to "+((AppModule)vm).getName()+" = "+getHost().getTotalAllocatedMipsForVm(vm));
-		}*/
+//		for(Vm vm : getHost().getVmList()){
+////			Logger.error(getName(), "MIPS allocated to "+((AppModule)vm).getName()+" = "+getHost().getTotalAllocatedMipsForVm(vm));
+//		}
 	}
 	
 	protected void processModuleArrival(SimEvent ev){

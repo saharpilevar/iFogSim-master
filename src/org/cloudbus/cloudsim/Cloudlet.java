@@ -149,6 +149,8 @@ public class Cloudlet {
 	/** The required files. */
 	private List<String> requiredFiles = null;   // list of required filenames
 
+	private Double deadline;
+
 	/**
 	 * Allocates a new Cloudlet object. The Cloudlet length, input and output file sizes should be
 	 * greater than or equal to 1. By default this constructor sets the history of this object.
@@ -1463,4 +1465,11 @@ public class Cloudlet {
 		return getUtilizationModelBw().getUtilization(time);
 	}
 
+	public Double getDeadline() {
+		return deadline;
+	}
+
+	public void setDeadline(Double deadline) {
+		this.deadline = deadline;
+	}
 }

@@ -15,6 +15,7 @@ import org.fog.utils.FogEvents;
 import org.fog.utils.NetworkUsageMonitor;
 import org.fog.utils.TimeKeeper;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,6 +109,9 @@ public abstract class Device extends FogDevice {
                             resTuple.setActualRequestedTuple(tpl);
                             resTuple.setExecutorName(tpl.getExecutorName());
                             resTuple.setExecutorId(tpl.getExecutorId());
+                            resTuple.setTaskId(tpl.getTaskId());
+                            resTuple.setParentTaskId(tpl.getParentTaskId());
+
                             updateTimingsOnSending(resTuple);
                             sendToSelf(resTuple);
                         }
@@ -141,7 +145,6 @@ public abstract class Device extends FogDevice {
         send(childId, networkDelay+latency, FogEvents.TUPLE_ARRIVAL, tuple);
         NetworkUsageMonitor.sendingTuple(latency, tuple.getCloudletFileSize());
     }
-
 
 
 }

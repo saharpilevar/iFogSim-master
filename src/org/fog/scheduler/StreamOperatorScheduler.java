@@ -9,6 +9,7 @@ import org.cloudbus.cloudsim.VmSchedulerTimeSharedOverSubscription;
 import org.cloudbus.cloudsim.sdn.overbooking.VmSchedulerTimeSharedOverbookingEnergy;
 
 public class StreamOperatorScheduler extends VmSchedulerTimeSharedOverbookingEnergy{
+//public class StreamOperatorScheduler extends VmSchedulerTimeShared{
 
 	public StreamOperatorScheduler(List<? extends Pe> pelist) {
 		super(pelist);

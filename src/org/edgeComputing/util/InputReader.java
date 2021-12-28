@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.DayOfWeek;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,6 +36,8 @@ public class InputReader {
                 edgeServer.setAreaId(Integer.parseInt(attributes[10]));
                 edgeServer.setJoinDelay(Integer.parseInt(attributes[11]));
                 edgeServer.setBidPrice(Double.valueOf(attributes[12]));
+                edgeServer.setXCoordinate(Double.valueOf(attributes[13]));
+                edgeServer.setYCoordinate(Double.valueOf(attributes[14]));
                 edgeServerList.add(edgeServer);
                 line = br.readLine();
             }
@@ -155,14 +158,7 @@ public class InputReader {
                    subTasks.add(SubTask);
                    task.setSubTasks(subTasks);
                }
-//                Task startSubTask = subTaskList.get(Integer.valueOf(attributes[0])).stream().filter(item -> item.getId()
-//                        .equals(attributes[0] + '-' + attributes[6])).collect(Collectors.toList()).get(0);
-//                Task endSubTask = subTaskList.get(Integer.valueOf(attributes[0])).stream().filter(item -> item.getId()
-//                        .equals(attributes[0] + '-' + attributes[7])).collect(Collectors.toList()).get(0);
-//                Graph graph = taskGraphsMap.get(Integer.valueOf(attributes[0]));
-//                graph.setStartTask(startSubTask);
-//                graph.setEndTask(endSubTask);
-//                task.setSubTasks(graph);
+
                 task.setDeadline(Double.parseDouble(attributes[8]));
                 if (taskListMap.containsKey(Integer.valueOf(attributes[5]))) {
                     taskListMap.get(Integer.valueOf(attributes[5])).add(task);
@@ -178,51 +174,6 @@ public class InputReader {
         return taskListMap;
     }
 
-//    private Map<Integer, Graph> readGraphsCSV(String graphFilePath, Map<Integer, List<Task>> subTasks) {
-//        Path pathToFile = Paths.get(graphFilePath);
-//
-//        Map<Integer, Graph> taskGraphMap = new HashMap<>();
-//        try (BufferedReader br = Files.newBufferedReader(pathToFile, StandardCharsets.US_ASCII)) {
-//            br.readLine();
-//            String line = br.readLine();
-//            while (line != null) {
-//                String[] attributes = line.split(",");
-//                List<Task> taskSubTasksList = subTasks.get(Integer.valueOf(attributes[3]));
-//                Task src = taskSubTasksList.stream().filter(
-//                        item -> item.getId().equals(attributes[3] + "-" + attributes[0])).collect(
-//                        Collectors.toList()).get(0);
-//                List<Task> rights = new ArrayList<>();
-//                List<Task> lefts = new ArrayList<>();
-//                for (String nodeId : attributes[1].split("\\|")) {
-//                    if (nodeId != null && !nodeId.equals("N")) {
-//                        Task right = taskSubTasksList.stream().filter(
-//                                item -> item.getId().equals(attributes[3] + "-" + nodeId)).collect(
-//                                Collectors.toList()).get(0);
-//                        rights.add(right);
-//                    }
-//                }
-//                for (String nodeId : attributes[2].split("\\|")) {
-//                    if (nodeId != null && !nodeId.equals("N")) {
-//                        Task left = taskSubTasksList.stream().filter(
-//                                item -> item.getId().equals(attributes[3] + "-" + nodeId)).collect(
-//                                Collectors.toList()).get(0);
-//                        lefts.add(left);
-//                    }
-//                }
-//
-//                if (!taskGraphMap.containsKey(Integer.valueOf(attributes[3]))) {
-//                    taskGraphMap.put(Integer.valueOf(attributes[3]), new Graph());
-//                }
-//                Graph graph = taskGraphMap.get(Integer.valueOf(attributes[3]));
-//                graph.addNode(src, lefts, rights);
-//                line = br.readLine();
-//            }
-//
-//        } catch (IOException ioe) {
-//            ioe.printStackTrace();
-//        }
-//        return taskGraphMap;
-//    }
 
     private Map<Integer, List<Task>> readSubTasksCSV(String filePath) {
         Path pathToFile = Paths.get(filePath);
@@ -234,12 +185,13 @@ public class InputReader {
                 String[] attributes = line.split(",");
                 Task task = new Task(attributes[5] + '-' + attributes[0],
                         Long.valueOf(attributes[1]), Long.valueOf(attributes[2]),
-                        Integer.valueOf(attributes[3]), Long.valueOf(attributes[4]),Long.valueOf(attributes[6]), "", "");
+                        Integer.valueOf(attributes[3]), Long.valueOf(attributes[4]), Double.valueOf(attributes[6]), "", "");
                 if (subTasksListMap.containsKey(Integer.valueOf(attributes[5]))) {
                     subTasksListMap.get(Integer.valueOf(attributes[5])).add(task);
                 } else {
                     subTasksListMap.put(Integer.valueOf(attributes[5]), new ArrayList<>(Arrays.asList(task)));
                 }
+                task.setDeadline(Double.parseDouble(attributes[7]));
                 line = br.readLine();
             }
 
@@ -271,6 +223,8 @@ public class InputReader {
                 ue.setUpLinkLatency(Double.valueOf(attributes[9]));
                 ue.setAreaId(Integer.parseInt(attributes[10]));
                 ue.setTransmissionPower(Double.valueOf(attributes[11]));
+                ue.setXCoordinate(Double.valueOf(attributes[12]));
+                ue.setYCoordinate(Double.valueOf(attributes[13]));
                 ueList.add(ue);
                 line = br.readLine();
             }

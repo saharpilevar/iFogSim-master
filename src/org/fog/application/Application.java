@@ -68,6 +68,15 @@ public class Application {
 		getModules().add(module);
 		
 	}
+
+	public void addAppModule(String moduleName, long mips, int ram, long size, long bw){
+		String vmm = "Xen";
+		AppModule module = new AppModule(FogUtils.generateEntityId(), moduleName, appId, userId,
+				mips, ram, bw, size, vmm, new TupleScheduler(mips, 1), new HashMap<Pair<String, String>, SelectivityModel>());
+
+		getModules().add(module);
+
+	}
 	
 	/**
 	 * Adds a non-periodic edge to the application model.

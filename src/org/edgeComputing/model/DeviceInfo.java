@@ -7,7 +7,7 @@ public class DeviceInfo {
     private Double energyConsumption;
     private Double lastUtilization;
     private Double networkDelay;
-    private Long mips;
+    private Double mips;
     private Integer ram;
     private Double bidPrice;
     private double xCoordinate;
@@ -61,11 +61,11 @@ public class DeviceInfo {
     public void setNetworkDelay(Double networkDelay) {
         this.networkDelay = networkDelay;
     }
-    public long getMips() {
+    public Double getMips() {
         return mips;
     }
 
-    public void setMips(long mips) {
+    public void setMips(Double mips) {
         this.mips = mips;
     }
 

@@ -27,6 +27,8 @@ public class TaskGeneratorDevice extends Sensor {
     private List<Task> taskList;
     private List<Task> runningSubTasks;
     private List<Task> doneSubTasks;
+    private List<Task> failedSubTasks;
+
     private String parentName;
     private Integer parentId;
     private boolean endProcessFlag = false;
@@ -41,6 +43,8 @@ public class TaskGeneratorDevice extends Sensor {
         this.taskList = new ArrayList<>();
         this.runningSubTasks = new ArrayList<>();
         this.doneSubTasks = new ArrayList<>();
+        this.failedSubTasks = new ArrayList<>();
+
         setTupleType(tupleType);
         setSensorName(tupleType);
         setUserId(userId);
@@ -54,6 +58,8 @@ public class TaskGeneratorDevice extends Sensor {
         this.taskList = taskList;
         this.runningSubTasks = new ArrayList<>();
         this.doneSubTasks = new ArrayList<>();
+        this.failedSubTasks = new ArrayList<>();
+
         setTupleType(tupleType);
         setSensorName(tupleType);
         setUserId(userId);
@@ -101,6 +107,7 @@ public class TaskGeneratorDevice extends Sensor {
                 tuple.setSrcModuleName(getSensorName());
                 tuple.setTupleBidPrice(subTask.getBidPrice());
                 tuple.setParentTaskId(taskId);
+                tuple.setDeadline(subTask.getDeadline());
 //                tuple.setActualToBeTransferredData(subTask.getNwLength() + subTask.getOutputSize());
                 if (subTask.getStatus().equals(TaskStatus.FAILED)) {
                     tuple.setFailed(true);
@@ -128,7 +135,7 @@ public class TaskGeneratorDevice extends Sensor {
             //1.send tuple to mobileDevice
             send(this.getGatewayDeviceId(), getLatency(), FogEvents.TUPLE_ARRIVAL, tuple);
         }
-        if (tuples.size() == 0 && this.endProcess() && !endProcessFlag) {
+        if (tuples.size() == 0 && this.endProcess() && !endProcessFlag && runningSubTasks.size()==0) {
             this.endProcessFlag = true;
             send(this.getGatewayDeviceId(), getLatency(), FogEvents.END_PROCESS);
         }
@@ -256,6 +263,7 @@ public class TaskGeneratorDevice extends Sensor {
             tasks.get(0).setStatus(TaskStatus.FAILED);
             failSubTasks(tuple);
             runningSubTasks.remove(tasks.get(0));
+            failedSubTasks.add(tasks.get(0));
             printTupleInfo(tuple);
             Logger.debug(getName(), "SubTask with id = " + tasks.get(0).getId() + " is failed!");
         }

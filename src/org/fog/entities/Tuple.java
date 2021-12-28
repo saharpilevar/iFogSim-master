@@ -42,6 +42,8 @@ public class Tuple extends Cloudlet{
 	private double bidPrice;
 	private Double upLinkBandwidth = -1.0D;
 	private Double downLinkBandwidth = -1.0D;
+	private Double deadline;
+
 
 	//Fields of source mobile device
 	private long mipsOfSourceDevice;
@@ -257,6 +259,8 @@ public class Tuple extends Cloudlet{
 		this.busyPowerOfSourceDevice = busyPowerOfSourceDevice;
 	}
 
+
+
 	public double getTransmissionPowerOfSourceDevice() {
 		return transmissionPowerOfSourceDevice;
 	}
@@ -320,6 +324,14 @@ public class Tuple extends Cloudlet{
 
 	public void setParentDeadline(Double parentDeadline) {
 		this.parentDeadline = parentDeadline;
+	}
+
+	public Double getDeadline() {
+		return deadline;
+	}
+
+	public void setDeadline(Double deadline) {
+		this.deadline = deadline;
 	}
 
 	public boolean isFailed() {

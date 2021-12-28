@@ -95,24 +95,31 @@ public class Edge {
 
             ModuleMapping moduleMapping = ModuleMapping.createModuleMapping(); // initializing a module mapping
 
-            moduleMapping.addModuleToDevice(Env.DEVICE_CLOUD, Env.DEVICE_CLOUD);
+//            moduleMapping.addModuleToDevice(Env.DEVICE_CLOUD, Env.DEVICE_CLOUD);
 
             for(FogDevice device : edgeServerDevices){
-                moduleMapping.addModuleToDevice(Env.DEVICE_EDGE_SERVER, device.getName());
+                moduleMapping.addModuleToDevice(device.getName(), device.getName());
             }
 
             for(FogDevice device : ueDevices){
-                moduleMapping.addModuleToDevice(Env.DEVICE_USER_EQUIPMENT, device.getName());
+                moduleMapping.addModuleToDevice(device.getName(), device.getName());
+            }
+            for (FogDevice device : routers) {
+                moduleMapping.addModuleToDevice(Env.DEVICE_ROUTER, device.getName());
             }
             moduleMapping.addModuleToDevice(Env.DEVICE_AUCTIONEER, auctioneerDevice.getName());
 
             List<FogDevice> fogDevices = new ArrayList<>();
             fogDevices.addAll(edgeServerDevices);
             fogDevices.addAll(ueDevices);
-            fogDevices.add(cloudDevice);
-            fogDevices.addAll(proxies);
+//            fogDevices.add(cloudDevice);
+//            fogDevices.addAll(proxies);
             fogDevices.addAll(routers);
             fogDevices.add(auctioneerDevice);
+            addDevicesToCustomEnv();
+            Env.fogDevices = fogDevices;
+
+
             controller = new Controller(Env.MASTER_CONTROLLER_NAME, fogDevices, sensors,
                     actuators);
 
@@ -138,82 +145,101 @@ public class Edge {
         /*
          * Adding modules (vertices) to the application model (directed graph)
          */
-        application.addAppModule(Env.DEVICE_CLOUD, 10);
-        application.addAppModule(Env.DEVICE_EDGE_SERVER, 10);
-        application.addAppModule(Env.DEVICE_USER_EQUIPMENT, 10);
-        application.addAppModule(Env.DEVICE_AUCTIONEER, 10);
+        application.addAppModule(Env.DEVICE_CLOUD,cloud.getMips(),cloud.getRam(),1000,cloud.getUpBw());
 
-        /*
-         * Connecting the application modules (vertices) in the application model (directed graph) with edges
-         */
-        application.addAppEdge(Env.TUPLE_TYPE_TASK, Env.DEVICE_USER_EQUIPMENT, 1000, 2000, Env.TUPLE_TYPE_TASK, Tuple.UP, AppEdge.SENSOR);
-        application.addAppEdge(Env.DEVICE_USER_EQUIPMENT, Env.DEVICE_AUCTIONEER, 1000, 2000, Env.TUPLE_TYPE_TASK_INFO, Tuple.UP, AppEdge.MODULE);
-        application.addAppEdge(Env.DEVICE_EDGE_SERVER, Env.DEVICE_AUCTIONEER, 1000, 2000, Env.TUPLE_TYPE_EDGE_SERVER_INFO, Tuple.UP, AppEdge.MODULE);
-        application.addAppEdge(Env.DEVICE_USER_EQUIPMENT, Env.DEVICE_EDGE_SERVER, 2000, 2000, Env.TUPLE_TYPE_TASK, Tuple.UP, AppEdge.MODULE);
-        application.addAppEdge(Env.DEVICE_USER_EQUIPMENT, Env.DEVICE_USER_EQUIPMENT, 100, 50, Env.TUPLE_TYPE_TASK, Tuple.UP, AppEdge.MODULE);
-        application.addAppEdge(Env.DEVICE_AUCTIONEER, Env.DEVICE_USER_EQUIPMENT, 100, 50, Env.TUPLE_TYPE_MATCH_RESPONSE_TO_MOBILE, Tuple.DOWN, AppEdge.MODULE);
-//        application.addAppEdge(Env.DEVICE_AUCTIONEER, Env.DEVICE_EDGE_SERVER, 100, 50, Env.TUPLE_TYPE_MATCH_RESPONSE_TO_EDGE_SERVER, Tuple.DOWN, AppEdge.MODULE);
-        application.addAppEdge(Env.DEVICE_EDGE_SERVER, Env.DEVICE_USER_EQUIPMENT, 100, 50, Env.TUPLE_TYPE_RESPONSE, Tuple.DOWN, AppEdge.MODULE);
-        application.addAppEdge(Env.DEVICE_USER_EQUIPMENT, Env.DEVICE_USER_EQUIPMENT, 100, 50, Env.TUPLE_TYPE_RESPONSE, Tuple.DOWN, AppEdge.MODULE);
+//        application.addAppModule(Env.DEVICE_AUCTIONEER,auctioneerServer.getMips(),auctioneerServer.getRam(),
+//                1000,auctioneerServer.getUpBw());
+        application.addAppModule(Env.DEVICE_AUCTIONEER, 30);
+        application.addAppModule(Env.DEVICE_ROUTER, 30);
 
-//        application.addAppEdge(Env.DEVICE_USER_EQUIPMENT, Env.DEVICE_RESPONSE_DISPLAY, 100, 50, Env.TUPLE_TYPE_RESPONSE, Tuple.DOWN, AppEdge.ACTUATOR);
+        List<EdgeServer> allEdgeServers = edgeServers.stream().collect(Collectors.toList());
+        List<UE> allUEs = ues.stream().collect(Collectors.toList());
 
-        /*
-         * Defining the input-output relationships (represented by selectivity) of the application modules.
-         */
-        application.addTupleMapping(Env.DEVICE_USER_EQUIPMENT, Env.TUPLE_TYPE_TASK, Env.TUPLE_TYPE_TASK_INFO, new FractionalSelectivity(
-                1.0)); // 1.0 tuples of type MOTION_VIDEO_STREAM are emitted by Motion Detector module per incoming tuple of type CAMERA
-
-        application.addTupleMapping(Env.DEVICE_USER_EQUIPMENT, Env.TUPLE_TYPE_MATCH_RESPONSE_TO_MOBILE, Env.TUPLE_TYPE_TASK, new FractionalSelectivity(
-                1.0)); // 1.0 tuples of type MOTION_VIDEO_STREAM are emitted by Motion Detector module per incoming tuple of type CAMERA
-        application.addTupleMapping(Env.DEVICE_USER_EQUIPMENT, Env.TUPLE_TYPE_TASK, Env.TUPLE_TYPE_RESPONSE, new FractionalSelectivity(
-                1.0)); // 1.0 tuples of type MOTION_VIDEO_STREAM are emitted by Motion Detector module per incoming tuple of type CAMERA
-
-        application.addTupleMapping(Env.DEVICE_AUCTIONEER, Env.TUPLE_TYPE_TASK_INFO, Env.TUPLE_TYPE_MATCH_RESPONSE_TO_MOBILE, new FractionalSelectivity(
-                1.0)); // 1.0 tuples of type MOTION_VIDEO_STREAM are emitted by Motion Detector module per incoming tuple of type CAMERA
-//        application.addTupleMapping(Env.DEVICE_AUCTIONEER, Env.TUPLE_TYPE_EDGE_SERVER_INFO, Env.TUPLE_TYPE_MATCH_RESPONSE_TO_EDGE_SERVER, new FractionalSelectivity(
-//                1.0)); // 1.0 tuples of type MOTION_VIDEO_STREAM are emitted by Motion Detector module per incoming tuple of type CAMERA
-
-        application.addTupleMapping(Env.DEVICE_EDGE_SERVER, Env.TUPLE_TYPE_TASK, Env.TUPLE_TYPE_RESPONSE, new FractionalSelectivity(
-                1.0)); // 1.0 tuples of type MOTION_VIDEO_STREAM are emitted by Motion Detector module per incoming tuple of type CAMERA
-
-
-
-        /*
-         * Defining application loops (maybe incomplete loops) to monitor the latency of.
-         * Here, we add two loops for monitoring : Motion Detector -> Object Detector -> Object Tracker and Object Tracker -> PTZ Control
-         */
-
-        final AppLoop loop1 = new AppLoop(new ArrayList<String>() {{
-            add(Env.TUPLE_TYPE_TASK);
-            add(Env.DEVICE_USER_EQUIPMENT);
-            add(Env.DEVICE_AUCTIONEER);
-
-
-        }});
-
-        final AppLoop loop2 = new AppLoop(new ArrayList<String>() {{
-            add(Env.DEVICE_USER_EQUIPMENT);
-            add(Env.DEVICE_EDGE_SERVER);
-        }});
-
-        final AppLoop loop3 = new AppLoop(new ArrayList<String>() {{
-            add(Env.DEVICE_USER_EQUIPMENT);
-            add(Env.DEVICE_USER_EQUIPMENT);
-        }});
-
-        final AppLoop loop4 = new AppLoop(new ArrayList<String>() {{
-            add(Env.DEVICE_EDGE_SERVER);
-            add(Env.DEVICE_AUCTIONEER);
-        }});
-
-
+        for (int i = 0; i <allEdgeServers.size() ; i++) {
+            application.addAppModule(allEdgeServers.get(i).getNodeName(), allEdgeServers.get(i).getMips(), allEdgeServers.get(i).getRam(),
+                    1000, allEdgeServers.get(i).getUpBw());
+        }
+        for (int j = 0; j < allUEs.size() ; j++) {
+            application.addAppModule(allUEs.get(j).getNodeName() ,allUEs.get(j).getMips(), allUEs.get(j).getRam(),
+                    1000, allUEs.get(j).getUpBw());
+        }
+        ///////////////////////////////////////////////////////////////////
         List<AppLoop> loops = new ArrayList<AppLoop>() {{
-            add(loop1);
-            add(loop2);
-            add(loop3);
-            add(loop4);
         }};
+//
+//        List<String> loop2 = new ArrayList<String>() {{
+//            add(Env.DEVICE_ROUTER);
+//        }};
+
+
+
+        for (int j = 0; j < allUEs.size() ; j++) {
+            application.addAppEdge(Env.TUPLE_TYPE_TASK, allUEs.get(j).getNodeName(), 1000, 2000, Env.TUPLE_TYPE_TASK, Tuple.UP, AppEdge.SENSOR);
+            application.addAppEdge(allUEs.get(j).getNodeName(), Env.DEVICE_ROUTER, 1000, 2000, Env.TUPLE_TYPE_TASK_INFO, Tuple.UP, AppEdge.MODULE);
+            application.addAppEdge(Env.DEVICE_ROUTER, allUEs.get(j).getNodeName(), 100, 50, Env.TUPLE_TYPE_MATCH_RESPONSE_TO_MOBILE, Tuple.DOWN, AppEdge.MODULE);
+            application.addAppEdge(allUEs.get(j).getNodeName(), Env.DEVICE_ROUTER, 1000, 2000, Env.TUPLE_TYPE_TASK, Tuple.UP, AppEdge.MODULE);
+            application.addAppEdge(Env.DEVICE_ROUTER, allUEs.get(j).getNodeName(), 100, 50, Env.TUPLE_TYPE_RESPONSE, Tuple.DOWN, AppEdge.MODULE);
+            application.addAppEdge(allUEs.get(j).getNodeName(), allUEs.get(j).getNodeName(), 1000, 2000, Env.TUPLE_TYPE_TASK, Tuple.UP, AppEdge.MODULE);
+            application.addAppEdge(allUEs.get(j).getNodeName(), allUEs.get(j).getNodeName(), 1000, 2000, Env.TUPLE_TYPE_RESPONSE, Tuple.DOWN, AppEdge.MODULE);
+            //////////////////////////////////////////////////////////////////////////////////////
+            application.addTupleMapping(allUEs.get(j).getNodeName(), Env.TUPLE_TYPE_TASK, Env.TUPLE_TYPE_TASK_INFO, new FractionalSelectivity(1.0));
+            application.addTupleMapping(allUEs.get(j).getNodeName(), Env.TUPLE_TYPE_MATCH_RESPONSE_TO_MOBILE, Env.TUPLE_TYPE_TASK, new FractionalSelectivity(1.0));
+            application.addTupleMapping(allUEs.get(j).getNodeName(), Env.TUPLE_TYPE_TASK, Env.TUPLE_TYPE_RESPONSE, new FractionalSelectivity(1.0));
+            /////////////////////////////////////////////////////////////////////////////////////
+            int j_=j;
+            List<String> loopTUA = new ArrayList<String>() {{
+                add(Env.TUPLE_TYPE_TASK);
+                add(allUEs.get(j_).getNodeName());
+                add(Env.DEVICE_AUCTIONEER);
+
+            }};
+            final AppLoop appLoopTUA = new AppLoop(loopTUA);
+            List<String> loopUU = new ArrayList<String>() {{
+                add(allUEs.get(j_).getNodeName());
+                add(allUEs.get(j_).getNodeName());
+
+            }};
+            final AppLoop appLoopUU = new AppLoop(loopUU);
+
+            loops.add(appLoopTUA);
+            loops.add(appLoopUU);
+
+                    }
+        for (int i = 0; i <allEdgeServers.size() ; i++) {
+            application.addAppEdge(allEdgeServers.get(i).getNodeName(), Env.DEVICE_ROUTER, 1000, 2000, Env.TUPLE_TYPE_EDGE_SERVER_INFO, Tuple.UP, AppEdge.MODULE);
+            application.addAppEdge(Env.DEVICE_ROUTER, allEdgeServers.get(i).getNodeName(), 1000, 2000, Env.TUPLE_TYPE_TASK, Tuple.UP, AppEdge.MODULE);
+            application.addAppEdge(allEdgeServers.get(i).getNodeName(), Env.DEVICE_ROUTER, 1000, 2000, Env.TUPLE_TYPE_RESPONSE, Tuple.DOWN, AppEdge.MODULE);
+            //////////////////////////////////////////////////////////////////////////
+            application.addTupleMapping(allEdgeServers.get(i).getNodeName(), Env.TUPLE_TYPE_TASK, Env.TUPLE_TYPE_RESPONSE, new FractionalSelectivity(1.0));
+            ///////////////////////////////////////////////////////////////////////////////
+
+        }
+        application.addAppEdge(Env.DEVICE_ROUTER, Env.DEVICE_AUCTIONEER, 100, 50, Env.TUPLE_TYPE_TASK_INFO, Tuple.UP, AppEdge.MODULE);
+        application.addAppEdge(Env.DEVICE_ROUTER, Env.DEVICE_AUCTIONEER, 100, 50, Env.TUPLE_TYPE_EDGE_SERVER_INFO, Tuple.UP, AppEdge.MODULE);
+        application.addAppEdge(Env.DEVICE_AUCTIONEER, Env.DEVICE_ROUTER, 100, 50, Env.TUPLE_TYPE_MATCH_RESPONSE_TO_MOBILE, Tuple.DOWN, AppEdge.MODULE);
+
+        application.addTupleMapping(Env.DEVICE_ROUTER, Env.TUPLE_TYPE_TASK_INFO, Env.TUPLE_TYPE_TASK_INFO, new FractionalSelectivity(1.0));
+        application.addTupleMapping(Env.DEVICE_ROUTER, Env.TUPLE_TYPE_EDGE_SERVER_INFO, Env.TUPLE_TYPE_EDGE_SERVER_INFO, new FractionalSelectivity(1.0));
+        application.addTupleMapping(Env.DEVICE_ROUTER, Env.TUPLE_TYPE_TASK, Env.TUPLE_TYPE_TASK, new FractionalSelectivity(1.0));
+        application.addTupleMapping(Env.DEVICE_ROUTER, Env.TUPLE_TYPE_RESPONSE, Env.TUPLE_TYPE_RESPONSE, new FractionalSelectivity(1.0));
+        application.addTupleMapping(Env.DEVICE_ROUTER, Env.TUPLE_TYPE_MATCH_RESPONSE_TO_MOBILE, Env.TUPLE_TYPE_MATCH_RESPONSE_TO_MOBILE, new FractionalSelectivity(1.0));
+        application.addTupleMapping(Env.DEVICE_AUCTIONEER, Env.TUPLE_TYPE_TASK_INFO, Env.TUPLE_TYPE_MATCH_RESPONSE_TO_MOBILE, new FractionalSelectivity(1.0));
+        application.addTupleMapping(Env.DEVICE_AUCTIONEER, Env.TUPLE_TYPE_EDGE_SERVER_INFO, Env.TUPLE_TYPE_MATCH_RESPONSE_TO_MOBILE, new FractionalSelectivity(1.0));
+
+////////////////////////////////////////////////////////////////////////////////////
+        for (int i = 0; i <allEdgeServers.size() ; i++) {
+            for (int j = 0; j <allUEs.size() ; j++) {
+                int i_=i;
+                int j_=j;
+            List<String> loop4 = new ArrayList<String>() {{
+                add(allUEs.get(j_).getNodeName());
+                add(allEdgeServers.get(i_).getNodeName());
+
+            }};
+            final AppLoop appLoop4 = new AppLoop(loop4);
+            loops.add(appLoop4);
+            }
+        }
 
         application.setLoops(loops);
         return application;
@@ -272,8 +298,10 @@ public class Edge {
 //        actuators.add(display);
         taskGeneratorDevice.setGatewayDeviceId(mobile.getId());
         taskGeneratorDevice.setLatency(0.0);  // latency of connection between EEG sensors and the parent Smartphone is 6 ms
-        mobile.setxCoordinate(getValue(5));
-        mobile.setyCoordinate(getValue(15));
+//        mobile.setxCoordinate(getValue(5));
+//        mobile.setyCoordinate(getValue(15));
+        mobile.setxCoordinate(ue.getXCoordinate());
+        mobile.setyCoordinate(ue.getYCoordinate());
         mobile.setTaskGeneratorDevice(taskGeneratorDevice);
 
 //        display.setGatewayDeviceId(mobile.getId());
@@ -284,8 +312,10 @@ public class Edge {
     private EdgeServerDevice addEdgeServer(EdgeServer edgeServer, int parentId) {
         EdgeServerDevice edgeServerDevice = createEdgeServerDevice(edgeServer);
         edgeServerDevice.setParentId(parentId);
-        edgeServerDevice.setxCoordinate(getValue(10.00));
-        edgeServerDevice.setyCoordinate(getValue(15));
+        edgeServerDevice.setxCoordinate(edgeServer.getXCoordinate());
+        edgeServerDevice.setyCoordinate(edgeServer.getYCoordinate());
+//        edgeServerDevice.setxCoordinate(getValue(10.00));
+//        edgeServerDevice.setyCoordinate(getValue(15));
         return edgeServerDevice;
     }
     private FogDevice createEdgeDevice(EdgeEntity edgeEntity) {
@@ -562,5 +592,34 @@ public class Edge {
     private static double getValue(double min) {
         Random rn = new Random();
         return rn.nextDouble()*10 + min;}
+
+    private void addDevicesToCustomEnv() {
+
+        for (FogDevice router : this.routers) {
+            DeviceInfo deviceInfo = new DeviceInfo();
+            deviceInfo.setId(router.getId());
+            deviceInfo.setName(router.getName());
+            Env.deviceInfoList.add(deviceInfo);
+        }
+        for (FogDevice ue : this.ueDevices) {
+            DeviceInfo deviceInfo = new DeviceInfo();
+            deviceInfo.setId(ue.getId());
+            deviceInfo.setName(ue.getName());
+            Env.deviceInfoList.add(deviceInfo);
+        }
+        for (FogDevice edgeServer : this.edgeServerDevices) {
+            DeviceInfo deviceInfo = new DeviceInfo();
+            deviceInfo.setId(edgeServer.getId());
+            deviceInfo.setName(edgeServer.getName());
+            Env.deviceInfoList.add(deviceInfo);
+        }
+        DeviceInfo auctioneerDeviceInfo = new DeviceInfo();
+        auctioneerDeviceInfo.setId(this.auctioneerDevice.getId());
+        auctioneerDeviceInfo.setName(this.auctioneerDevice.getName());
+        Env.deviceInfoList.add(auctioneerDeviceInfo);
+
+        Env.numberOfEdgeServers = this.edgeServerDevices.size();
+    }
+
 
 }
