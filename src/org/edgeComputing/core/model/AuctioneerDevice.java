@@ -20,6 +20,12 @@ import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 
+import org.edgeComputing.ethereum.Web3JClient;
+import org.edgeComputing.ethereum.AuctionManager;
+import org.web3j.tx.gas.DefaultGasProvider;
+import org.web3j.crypto.Credentials;
+import java.math.BigInteger;
+
 public class AuctioneerDevice extends Device {
     private List<DeviceInfo> edgeServerInfoList = new ArrayList<>();
     private List<Tuple> tupleList = new ArrayList<>();
@@ -49,7 +55,10 @@ public class AuctioneerDevice extends Device {
                 handleEdgeServerInfo(ev);
                 break;
             case FogEvents.FIND_MATCHES:
-                calculateInputMatrix();
+                // calculateInputMatrix();
+                Logger.debug(this.getName(), "********** FIND OUT MATCHES");
+                Web3JClient client = new Web3JClient();
+                Logger.debug(this.getName(), client.GetLastBlockNumber().toString());
                 break;
             case FogEvents.LAUNCH_MODULE:
                 this.send(this.getId(), 160, FogEvents.FIND_MATCHES);
@@ -64,11 +73,49 @@ public class AuctioneerDevice extends Device {
     protected void handleTaskInfo(SimEvent ev) {
         Tuple tuple = (Tuple) ev.getData();
         tupleList.add(tuple);
+        Logger.debug(this.getName(), "********** REGISTERING TUPLE");
+        Web3JClient client = new Web3JClient();
+        Credentials cred = Credentials.create(
+            "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+            "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+        );
+        Logger.debug(this.getName(), cred.getAddress());
+        AuctionManager auctionCli = AuctionManager.load(
+            "0x382c25489875463c1952e428874967CfA4be2889", client.web3j, cred, new DefaultGasProvider()
+        );
+
+        String[] partsOfTupleId = tuple.getTaskId().split("-");
+        int tupleID = Integer.parseInt(partsOfTupleId[1]);
+        Double scaledbid = tuple.getTupleBidPrice() * 1000;
+        Double scaledtr = tuple.getTransmissionPowerOfSourceDevice() * 10;
+        Double scaledidle = tuple.getIdlePowerOfSourceDevice() * 1000;
+        Double x = tuple.getSourcexCoordinate();
+        Double y = tuple.getSourceyCoordinate();
+        try {
+
+            auctionCli.registerMobileTask(
+                new BigInteger(Integer.toString(tupleID)), 
+                new BigInteger(Long.toString(tuple.getCloudletLength())), // cpu length
+                new BigInteger(Long.toString(tuple.getCloudletFileSize())), // nw length
+                new BigInteger(Long.toString(tuple.getCloudletOutputSize())),
+                new BigInteger(Integer.toString(tuple.getDeadline().intValue())),
+                new BigInteger(Integer.toString(scaledbid.intValue())),
+                new BigInteger(Integer.toString(tuple.getUpLinkBandwidth().intValue())),
+                new BigInteger(Integer.toString(x.intValue())),
+                new BigInteger(Integer.toString(y.intValue())),
+                new BigInteger(Integer.toString(scaledtr.intValue())),
+                new BigInteger(Integer.toString(scaledidle.intValue()))
+            ).send();
+        } catch (Exception e) {
+            Logger.debug(this.getName(), e.getMessage());
+        }
     }
 
     protected void handleEdgeServerInfo(SimEvent ev) {
         DeviceInfo edgeServerInfo = (DeviceInfo) ev.getData();
-        edgeServerInfoList.add(edgeServerInfo);
+        // edgeServerInfoList.add(edgeServerInfo);
+        Logger.debug(this.getName(), "********** REGISTERING SERVER");
+
     }
 
     protected void handleTasks(SimEvent ev) {

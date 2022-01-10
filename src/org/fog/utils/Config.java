@@ -1,4 +1,6 @@
 package org.fog.utils;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Config {
 
@@ -23,7 +25,9 @@ public class Config {
 
 
 	public static String getOutputPath(){
-		String path = PROJECT_PATH + OS_SEPARATOR + "output" + OS_SEPARATOR + "result";
+		// String path = PROJECT_PATH + OS_SEPARATOR + "output" + OS_SEPARATOR + "result";
+		Path currentPath = Paths.get(System.getProperty("user.dir"));
+		String path = Paths.get(currentPath.toString(), "output", "result").toString();
 		return path;
 	}
 }

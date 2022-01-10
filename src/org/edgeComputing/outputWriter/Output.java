@@ -8,6 +8,7 @@ import org.edgeComputing.Env;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.nio.file.Paths;
 
 import org.edgeComputing.model.DeviceInfo;
 import org.edgeComputing.util.*;
@@ -38,7 +39,7 @@ public class Output {
 
     public static void writeSubTasksInfo(){
         try (PrintWriter writer = new PrintWriter(new File(
-                Config.getOutputPath() + Config.OS_SEPARATOR + "_SubTasksInfo.csv"))) {
+                Paths.get(Config.getOutputPath(),"_SubTasksInfo.csv").toString()))) {
 
             StringBuilder sb = new StringBuilder();
             sb.append("taskId");
@@ -112,7 +113,7 @@ public class Output {
     }
     public static void writeConsumedEnergy() {
         try (PrintWriter writer = new PrintWriter(new File(
-                Config.getOutputPath() + Config.OS_SEPARATOR + "_ConsumedEnergy.csv"))) {
+                Paths.get(Config.getOutputPath(),"_ConsumedEnergy.csv").toString()))) {
 
             List<String> deviceNames = Env.deviceInfoList.stream().map(DeviceInfo::getName).collect(Collectors.toList());
             StringBuilder sb = new StringBuilder();
@@ -145,7 +146,7 @@ public class Output {
     }
     public static void writeUtilization() {
         try (PrintWriter writer = new PrintWriter(new File(
-                Config.getOutputPath() + Config.OS_SEPARATOR + "_Utilization.csv"))) {
+                Paths.get(Config.getOutputPath(),"_Utilization.csv").toString()))) {
 
             List<String> deviceNames = Env.deviceInfoList.stream().map(DeviceInfo::getName).collect(Collectors.toList());
             StringBuilder sb = new StringBuilder();
@@ -179,7 +180,7 @@ public class Output {
 
     public static void writeTransferredDataInfo() {
         try (PrintWriter writer = new PrintWriter(new File(
-                Config.getOutputPath() + Config.OS_SEPARATOR + "_TransferredData.csv"))) {
+                Paths.get(Config.getOutputPath(),"_TransferredData.csv").toString()))) {
             StringBuilder sb = new StringBuilder();
             sb.append("time");
             sb.append(',');
@@ -239,7 +240,7 @@ public class Output {
 
     public static void writeTasksInfo() {
         try (PrintWriter writer = new PrintWriter(new File(
-                Config.getOutputPath() + Config.OS_SEPARATOR + "_TasksInfo.csv"))) {
+                Paths.get(Config.getOutputPath(),"_TasksInfo.csv").toString()))) {
 
             StringBuilder sb = new StringBuilder();
             sb.append("taskId");
@@ -273,7 +274,7 @@ public class Output {
 
     public static void writeLatencyInfo() {
         try (PrintWriter writer = new PrintWriter(new File(
-                Config.getOutputPath() + Config.OS_SEPARATOR + "_TasksLatencyInfo.csv"))) {
+                Paths.get(Config.getOutputPath(),"_TasksLatencyInfo.csv").toString()))) {
 
             StringBuilder sb = new StringBuilder();
             sb.append("time");

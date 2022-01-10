@@ -4,3 +4,4 @@ bin/
 .project
 *.class
 target
+output/result/*.csv
