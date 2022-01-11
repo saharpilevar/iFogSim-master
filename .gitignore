@@ -4,4 +4,5 @@ bin/
 .project
 *.class
 target
+*.swp
 output/result/*.csv

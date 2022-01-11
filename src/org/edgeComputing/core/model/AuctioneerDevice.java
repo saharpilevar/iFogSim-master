@@ -22,9 +22,8 @@ import java.util.stream.Stream;
 
 import org.edgeComputing.ethereum.Web3JClient;
 import org.edgeComputing.ethereum.AuctionManager;
-import org.web3j.tx.gas.DefaultGasProvider;
-import org.web3j.crypto.Credentials;
 import java.math.BigInteger;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 public class AuctioneerDevice extends Device {
     private List<DeviceInfo> edgeServerInfoList = new ArrayList<>();
@@ -56,9 +55,7 @@ public class AuctioneerDevice extends Device {
                 break;
             case FogEvents.FIND_MATCHES:
                 // calculateInputMatrix();
-                Logger.debug(this.getName(), "********** FIND OUT MATCHES");
-                Web3JClient client = new Web3JClient();
-                Logger.debug(this.getName(), client.GetLastBlockNumber().toString());
+                findMatchesFromContract();
                 break;
             case FogEvents.LAUNCH_MODULE:
                 this.send(this.getId(), 160, FogEvents.FIND_MATCHES);
@@ -75,14 +72,7 @@ public class AuctioneerDevice extends Device {
         tupleList.add(tuple);
         Logger.debug(this.getName(), "********** REGISTERING TUPLE");
         Web3JClient client = new Web3JClient();
-        Credentials cred = Credentials.create(
-            "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
-            "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
-        );
-        Logger.debug(this.getName(), cred.getAddress());
-        AuctionManager auctionCli = AuctionManager.load(
-            "0x382c25489875463c1952e428874967CfA4be2889", client.web3j, cred, new DefaultGasProvider()
-        );
+        AuctionManager auctionContract = client.getContract();
 
         String[] partsOfTupleId = tuple.getTaskId().split("-");
         int tupleID = Integer.parseInt(partsOfTupleId[1]);
@@ -93,8 +83,8 @@ public class AuctioneerDevice extends Device {
         Double y = tuple.getSourceyCoordinate();
         try {
 
-            auctionCli.registerMobileTask(
-                new BigInteger(Integer.toString(tupleID)), 
+            TransactionReceipt r = auctionContract.registerMobileTask(
+                new BigInteger(Integer.toString(tupleID + 1)), 
                 new BigInteger(Long.toString(tuple.getCloudletLength())), // cpu length
                 new BigInteger(Long.toString(tuple.getCloudletFileSize())), // nw length
                 new BigInteger(Long.toString(tuple.getCloudletOutputSize())),
@@ -106,6 +96,12 @@ public class AuctioneerDevice extends Device {
                 new BigInteger(Integer.toString(scaledtr.intValue())),
                 new BigInteger(Integer.toString(scaledidle.intValue()))
             ).send();
+            
+            // Logger.debug(this.getName(), r.getLogs()[0]);
+            Logger.debug(this.getName(), r.toString());
+            AuctionManager.MobileTaskRegisteredEventResponse res = auctionContract.getMobileTaskRegisteredEvents(r).get(0);
+            Logger.debug(this.getName(), Integer.toString(res.id.intValue()));         
+
         } catch (Exception e) {
             Logger.debug(this.getName(), e.getMessage());
         }
@@ -113,9 +109,66 @@ public class AuctioneerDevice extends Device {
 
     protected void handleEdgeServerInfo(SimEvent ev) {
         DeviceInfo edgeServerInfo = (DeviceInfo) ev.getData();
-        // edgeServerInfoList.add(edgeServerInfo);
+        edgeServerInfoList.add(edgeServerInfo);
         Logger.debug(this.getName(), "********** REGISTERING SERVER");
+        Web3JClient client = new Web3JClient();
+        AuctionManager auctionContract = client.getContract();
 
+        try {
+            TransactionReceipt r = auctionContract.registerServerNode(
+                edgeServerInfo.getName(),
+                new BigInteger(Integer.toString(new Double(edgeServerInfo.getMips()).intValue())),
+                new BigInteger(Integer.toString(new Double(edgeServerInfo.getxCoordinate()).intValue())),
+                new BigInteger(Integer.toString(new Double(edgeServerInfo.getyCoordinate()).intValue())),
+                new BigInteger(Integer.toString(new Double(edgeServerInfo.getBidPrice()).intValue()))
+            ).send();
+            
+            // Logger.debug(this.getName(), r.getLogs()[0]);
+            Logger.debug(this.getName(), r.toString());
+            AuctionManager.ServerNodeRegisteredEventResponse res = auctionContract.getServerNodeRegisteredEvents(r).get(0);
+            Logger.debug(this.getName(), res.name);         
+
+        } catch (Exception e) {
+            Logger.debug(this.getName(), e.getMessage());
+        }
+    }
+
+    protected void findMatchesFromContract() {
+        Logger.debug(this.getName(), "********** FIND OUT MATCHES");
+        Web3JClient client = new Web3JClient();
+        AuctionManager auctionContract = client.getContract();
+        int[] matches = new int[tupleList.size()];
+        for (int i=0; i < tupleList.size(); i ++) {
+            String[] partsOfTupleId = tupleList.get(i).getTaskId().split("-");
+            int tupleID = Integer.parseInt(partsOfTupleId[1]);
+            try {
+                TransactionReceipt r = auctionContract.auctionResultTuple(
+                    new BigInteger(Integer.toString(tupleID + 1))
+                ).send();
+                
+                // Logger.debug(this.getName(), r.getLogs()[0]);
+                Logger.debug(this.getName(), r.toString());
+                AuctionManager.AuctionTupleResultEventResponse res = auctionContract.getAuctionTupleResultEvents(r).get(0);
+                if (res.serverName.equals("NOTFOUND")) {
+                    Logger.debug(this.getName(), "not assinged");
+                    matches[i] = -1;
+                } else {
+                    Logger.debug(this.getName(), Integer.toString(tupleID) + " " + res.serverName);
+                    String[] partsOfServerId = res.serverName.split("EDGE_SERVER_");
+                    int j = Integer.parseInt(partsOfServerId[1]);
+                    Logger.debug(this.getName(), Integer.toString(tupleID) + " " + Integer.toString(j));
+                    matches[i] = j;
+                }        
+
+            } catch (Exception e) {
+                Logger.debug(this.getName(), e.getMessage());
+            }
+
+        }
+        //for (int i = 0; i < matches.length; i ++ ) {
+          //  Logger.debug(this.getName(), " for tupleID: server=> " + Integer.toString(i) + " " + Integer.toString(matches[i]));
+        //}
+        sendAuctioneerResponseToMobile(matches);
     }
 
     protected void handleTasks(SimEvent ev) {
@@ -585,8 +638,16 @@ public class AuctioneerDevice extends Device {
                 tuple.setDestinationId(tuple.getSourceDeviceId());
                 tuple.setDestModuleName(tuple.getSrcModuleName());
             } else {
-                tuple.setDestinationId(edgeServerInfoList.get(matches[tupleId]).getId());
-                tuple.setDestModuleName(edgeServerInfoList.get(matches[tupleId]).getName());
+                String EdgeServerName = "EDGE_SERVER_" + matches[tupleId];
+                DeviceInfo serverInfo = null;
+                for (DeviceInfo devInfo:edgeServerInfoList) {
+                    if (devInfo.getName().equals(EdgeServerName))
+                        serverInfo = devInfo;
+                }
+
+
+                tuple.setDestinationId(serverInfo.getId());
+                tuple.setDestModuleName(serverInfo.getName());
             }
             tuple.setTupleType(Env.TUPLE_TYPE_MATCH_RESPONSE_TO_MOBILE);
 

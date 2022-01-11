@@ -12,23 +12,40 @@ import java.util.List;
 
 import java.util.concurrent.ExecutionException;
 import java.lang.InterruptedException;
+import org.web3j.crypto.Credentials;
+import org.edgeComputing.ethereum.AuctionManager;
+import org.web3j.tx.gas.DefaultGasProvider;
 
 public class Web3JClient {
-   public static Web3jService service = new HttpService("http://localhost:8545"); // put fullnode url here
-   public static Web3j web3j = Web3j.build(service);
+    public static Web3jService service = new HttpService("http://localhost:8545"); // put fullnode url here
+    public static Web3j web3j = Web3j.build(service);
+    public Credentials cred;
+    public String contractAddress = "0x31Fc1f78fbA706cA9A87b63C2686435d521604Ac";
+    public Web3JClient() {
+        this.cred = Credentials.create(
+            "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+        );
+    }
+    public AuctionManager getContract() {
+        return AuctionManager.load(
+            this.contractAddress, 
+            this.web3j, 
+            this.cred, 
+            new DefaultGasProvider()
+        );
+    }
+    public static BigInteger GetLastBlockNumber()
+    {
+        try {
+            EthBlockNumber result = web3j.ethBlockNumber().sendAsync().get();
+            return result.getBlockNumber();
+        } catch(InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
-   public static BigInteger GetLastBlockNumber()
-   {
-       try {
-           EthBlockNumber result = web3j.ethBlockNumber().sendAsync().get();
-           return result.getBlockNumber();
-       } catch(InterruptedException | ExecutionException e) {
-           e.printStackTrace();
-       }
-       return null;
-   }
-
-   public static void main(String[] args) throws Exception {
-// test function here
-   }
+    public static void main(String[] args) throws Exception {
+    // test function here
+    }
 }
