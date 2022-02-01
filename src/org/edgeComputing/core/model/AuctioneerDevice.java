@@ -78,7 +78,7 @@ public class AuctioneerDevice extends Device {
         int tupleID = Integer.parseInt(partsOfTupleId[1]);
         Double scaledbid = tuple.getTupleBidPrice() * 1000;
         Double scaledtr = tuple.getTransmissionPowerOfSourceDevice() * 10;
-        Double scaledidle = tuple.getIdlePowerOfSourceDevice() * 1000;
+        Double scaledidle = tuple.getIdlePowerOfSourceDevice() * 10000;
         Double x = tuple.getSourcexCoordinate();
         Double y = tuple.getSourceyCoordinate();
         try {

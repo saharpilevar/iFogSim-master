@@ -20,7 +20,7 @@ public class Web3JClient {
     public static Web3jService service = new HttpService("http://localhost:8545"); // put fullnode url here
     public static Web3j web3j = Web3j.build(service);
     public Credentials cred;
-    public String contractAddress = "0x31Fc1f78fbA706cA9A87b63C2686435d521604Ac";
+    public String contractAddress = "0xd31d3e1F60552ba8B35aA3Bd17c949404fdd12c4";
     public Web3JClient() {
         this.cred = Credentials.create(
             "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
