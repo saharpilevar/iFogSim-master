@@ -120,7 +120,7 @@ public class AuctioneerDevice extends Device {
                 new BigInteger(Integer.toString(new Double(edgeServerInfo.getMips()).intValue())),
                 new BigInteger(Integer.toString(new Double(edgeServerInfo.getxCoordinate()).intValue())),
                 new BigInteger(Integer.toString(new Double(edgeServerInfo.getyCoordinate()).intValue())),
-                new BigInteger(Integer.toString(new Double(edgeServerInfo.getBidPrice()).intValue()))
+                new BigInteger(Integer.toString(new Double(edgeServerInfo.getBidPrice() * 1000).intValue()))
             ).send();
             
             // Logger.debug(this.getName(), r.getLogs()[0]);
